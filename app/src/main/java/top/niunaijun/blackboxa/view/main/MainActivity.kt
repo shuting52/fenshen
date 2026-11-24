@@ -60,10 +60,10 @@ class MainActivity : LoadingActivity() {
     private fun setupBlur() {
         viewBinding.blurView.setupWith(viewBinding.root)
             .setBlurAlgorithm(RenderScriptBlur(this))
-            .setBlurRadius(18f)
+            .setBlurRadius(4f)
             .setBlurAutoUpdate(true)
             .setHasFixedTransformationMatrix(true)
-        viewBinding.blurView.setOverlayColor(Color.parseColor("#59181818"))
+        viewBinding.blurView.setOverlayColor(Color.parseColor("#66121212"))
     }
 
     private fun initToolbarSubTitle() {

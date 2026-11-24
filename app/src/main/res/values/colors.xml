@@ -11,8 +11,7 @@
     <color name="background">#121212</color>
     <color name="surface">#181818</color>
     <!-- 玻璃卡：#181818 透明度 0.38，boli 列表卡同一档 -->
-    <color name="glass_bg">#61181818</color>
-    <color name="glass_border">#1FFFFFFF</color>
+    <color name="glass_bg">#66121212</color>
     <color name="brand_green">#16A34A</color>
     <color name="brand_blue">#0EA5E9</color>
     <color name="brand_indigo">#6366F1</color>

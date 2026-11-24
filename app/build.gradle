@@ -18,8 +18,8 @@ android {
         applicationId "top.niunaijun.blackboxa"
         minSdkVersion 21
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 17
-        versionName "2.3.2"
+        versionCode 18
+        versionName "2.3.3"
 
         flavorDimensions "BlackBox32"
     }
