@@ -17,12 +17,19 @@ import top.niunaijun.blackboxa.databinding.ItemAppBinding
 
 class AppsAdapter : RVHolderFactory() {
 
+    /** 批量删除：多选模式 + 已选中的分身（包名|用户 id） */
+    var selectMode: Boolean = false
+    val selected: MutableSet<String> = mutableSetOf()
+    var onSelectionChanged: (() -> Unit)? = null
+
+    fun selectionKey(item: AppInfo): String = "${item.packageName}|${item.userId}"
+
     override fun createViewHolder(parent: ViewGroup?, viewType: Int, item: Any): RVHolder<out Any> {
         return AppsVH(inflate(R.layout.item_app,parent))
     }
 
 
-    class AppsVH(itemView:View):RVHolder<AppInfo>(itemView){
+    inner class AppsVH(itemView:View):RVHolder<AppInfo>(itemView){
 
         val binding = ItemAppBinding.bind(itemView)
 
@@ -33,6 +40,14 @@ class AppsAdapter : RVHolderFactory() {
                 binding.cornerLabel.visibility = View.VISIBLE
             }else{
                 binding.cornerLabel.visibility = View.INVISIBLE
+            }
+            binding.check.visibility = if (selectMode) View.VISIBLE else View.GONE
+            binding.check.setOnCheckedChangeListener(null)
+            binding.check.isChecked = selected.contains(selectionKey(item))
+            binding.check.setOnCheckedChangeListener { _, checked ->
+                if (checked) selected.add(selectionKey(item))
+                else selected.remove(selectionKey(item))
+                onSelectionChanged?.invoke()
             }
         }
 

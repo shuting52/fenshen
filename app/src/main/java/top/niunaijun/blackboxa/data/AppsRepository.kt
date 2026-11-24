@@ -259,13 +259,9 @@ class AppsRepository {
         }
     }
 
-    fun unInstall(
-        packageName: String,
-        userID: Int,
-        realUserId: Int,
-        resultLiveData: MutableLiveData<String>
-    ) {
-        try {
+    /** 卸载一个分身（不发结果）：单个卸载和批量删除共用 */
+    private fun uninstallOne(packageName: String, userID: Int, realUserId: Int): Boolean {
+        return try {
             BlackBoxCore.get().uninstallPackageAsUser(packageName, realUserId)
             // 空间里还有同包名的分身时，保留它在排序列表里的位置
             val stillThere = CloneSpace.spaceMembers(userID).any {
@@ -281,11 +277,41 @@ class AppsRepository {
                 BlackBoxCore.get().deleteUser(realUserId)
                 CloneSpace.removeCloneUser(realUserId)
             }
-            scanUser()
-            resultLiveData.postValue(getString(R.string.uninstall_success))
+            true
         } catch (e: Exception) {
-            resultLiveData.postValue(getString(R.string.uninstall_fail))
+            false
         }
+    }
+
+    fun unInstall(
+        packageName: String,
+        userID: Int,
+        realUserId: Int,
+        resultLiveData: MutableLiveData<String>
+    ) {
+        val ok = uninstallOne(packageName, userID, realUserId)
+        scanUser()
+        resultLiveData.postValue(
+            getString(if (ok) R.string.uninstall_success else R.string.uninstall_fail)
+        )
+    }
+
+    /** 批量删除：一个一个卸，最后只报一次结果 */
+    fun unInstallBatch(
+        items: List<AppInfo>,
+        userID: Int,
+        resultLiveData: MutableLiveData<String>
+    ) {
+        var ok = 0
+        items.forEach { info ->
+            if (uninstallOne(info.packageName, userID, info.userId)) ok++
+        }
+        val fail = items.size - ok
+        scanUser()
+        resultLiveData.postValue(
+            if (fail == 0) getString(R.string.batch_delete_done, ok.toString())
+            else getString(R.string.batch_delete_partial, ok.toString(), fail.toString())
+        )
     }
 
 

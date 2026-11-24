@@ -22,4 +22,9 @@
         android:id="@+id/main_check_update"
         android:title="@string/check_update"
         app:showAsAction="never" />
+
+    <item
+        android:id="@+id/main_delete_space"
+        android:title="@string/delete_space"
+        app:showAsAction="never" />
 </menu>

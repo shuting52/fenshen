@@ -58,6 +58,21 @@ object CloneSpace {
         return spaceId
     }
 
+    /** 删掉一个空间的全部记录：备注、克隆用户映射、它名下分身的自定义名 */
+    fun removeSpace(spaceId: Int) {
+        val prefs = AppManager.mRemarkSharedPreferences
+        val members = prefs.getString("CloneUsers_$spaceId", "")
+            ?.split(",")?.mapNotNull { it.toIntOrNull() } ?: emptyList()
+        prefs.edit {
+            remove("Remark$spaceId")
+            remove("CloneUsers_$spaceId")
+            members.forEach { remove("CloneOwner_$it") }
+            prefs.all.keys
+                .filter { it.startsWith("CloneAppName|$spaceId|") }
+                .forEach { remove(it) }
+        }
+    }
+
     /** 空间默认名：分身空间1️⃣、分身空间2️⃣…… */
     fun defaultRemark(userId: Int): String = "分身空间${userId + 1}\uFE0F\u20E3"
 

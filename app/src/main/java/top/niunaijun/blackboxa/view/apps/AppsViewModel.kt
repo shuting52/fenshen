@@ -41,6 +41,12 @@ class AppsViewModel(private val repo: AppsRepository) : BaseViewModel() {
         }
     }
 
+    fun unInstallBatch(items: List<AppInfo>, userID: Int) {
+        launchOnUI {
+            repo.unInstallBatch(items, userID, resultLiveData)
+        }
+    }
+
     fun clearApkData(packageName: String,userID: Int){
         launchOnUI {
             repo.clearApkData(packageName,userID,resultLiveData)

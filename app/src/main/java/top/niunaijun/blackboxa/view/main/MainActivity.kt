@@ -121,6 +121,8 @@ class MainActivity : LoadingActivity() {
         previewInstalledAppList()
         setupBlur()
         initToolbar(viewBinding.toolbarLayout.toolbar, R.string.app_name)
+        // 顶栏只留空间名副标题，“淑婷分身”标题字不要了
+        viewBinding.toolbarLayout.toolbar.title = ""
         initViewPager()
         initFab()
         initToolbarSubTitle()
@@ -489,6 +491,52 @@ class MainActivity : LoadingActivity() {
         viewBinding.toolbarLayout.toolbar.subtitle = CloneSpace.getRemark(userId)
     }
 
+    /** 一键删除当前空间：它名下的隐藏分身用户一起删，备注和映射也清掉；只剩一个空间时不让删 */
+    private fun deleteCurrentSpace() {
+        val userList = CloneSpace.realUserIds()
+        if (userList.size <= 1) {
+            toast(R.string.space_delete_last)
+            return
+        }
+        val spaceId = currentUser
+        val remark = CloneSpace.getRemark(spaceId)
+        MaterialDialog(this).show {
+            title(text = getString(R.string.delete_space_confirm_title, remark))
+            message(text = getString(R.string.delete_space_hint))
+            positiveButton(R.string.done) {
+                showLoading()
+                Thread {
+                    CloneSpace.spaceMembers(spaceId).forEach { id ->
+                        if (id != spaceId) BlackBoxCore.get().deleteUser(id)
+                    }
+                    BlackBoxCore.get().deleteUser(spaceId)
+                    CloneSpace.removeSpace(spaceId)
+                    runOnUiThread {
+                        hideLoading()
+                        rebuildViewPager()
+                        toast(getString(R.string.space_deleted, remark))
+                    }
+                }.start()
+            }
+            negativeButton(R.string.cancel)
+        }
+    }
+
+    /** 删完空间后整页重建：新造一套 Fragment + 新造一个 Adapter，位置和内容不会错位 */
+    private fun rebuildViewPager() {
+        val userList = CloneSpace.realUserIds()
+        fragmentList.clear()
+        userList.forEach { fragmentList.add(AppsFragment.newInstance(it)) }
+        fragmentList.add(AppsFragment.newInstance(userList.size))
+        currentUser = userList.firstOrNull() ?: 0
+        mViewPagerAdapter = ViewPagerAdapter(this)
+        mViewPagerAdapter.replaceData(fragmentList)
+        viewBinding.viewPager.adapter = mViewPagerAdapter
+        viewBinding.dotsIndicator.setViewPager2(viewBinding.viewPager)
+        viewBinding.viewPager.setCurrentItem(0, false)
+        updateUserRemark(currentUser)
+    }
+
     private val apkPathResult =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             if (it.resultCode == RESULT_OK) {
@@ -530,6 +578,10 @@ class MainActivity : LoadingActivity() {
 
             R.id.main_check_update -> {
                 checkAppUpdate(manual = true)
+            }
+
+            R.id.main_delete_space -> {
+                deleteCurrentSpace()
             }
         }
 

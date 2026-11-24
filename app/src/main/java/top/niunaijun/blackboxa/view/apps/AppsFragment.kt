@@ -48,6 +48,8 @@ class AppsFragment : Fragment() {
 
     private lateinit var mAdapter: RVAdapter<AppInfo>
 
+    private lateinit var appsAdapter: AppsAdapter
+
     private val viewBinding: FragmentAppsBinding by inflate()
 
     private var popupMenu: PopupMenu? = null
@@ -82,8 +84,10 @@ class AppsFragment : Fragment() {
 
         viewBinding.stateView.showEmpty()
 
+        appsAdapter = AppsAdapter()
+        appsAdapter.onSelectionChanged = { updateBatchBar() }
         mAdapter =
-            RVAdapter<AppInfo>(requireContext(), AppsAdapter()).bind(viewBinding.recyclerView)
+            RVAdapter<AppInfo>(requireContext(), appsAdapter).bind(viewBinding.recyclerView)
 
         viewBinding.recyclerView.adapter = mAdapter
         viewBinding.recyclerView.layoutManager = GridLayoutManager(requireContext(), 4)
@@ -96,10 +100,17 @@ class AppsFragment : Fragment() {
         val itemTouchHelper = ItemTouchHelper(touchCallBack)
         itemTouchHelper.attachToRecyclerView(viewBinding.recyclerView)
 
-        mAdapter.setItemClickListener { _, data, _ ->
-            showLoading()
-            viewModel.launchApk(data.packageName, data.userId)
+        mAdapter.setItemClickListener { _, data, position ->
+            if (appsAdapter.selectMode) {
+                toggleSelection(data, position)
+            } else {
+                showLoading()
+                viewModel.launchApk(data.packageName, data.userId)
+            }
         }
+
+        viewBinding.batchDelete.setOnClickListener { deleteSelected() }
+        viewBinding.batchCancel.setOnClickListener { exitSelectionMode() }
 
 
         interceptTouch()
@@ -160,6 +171,7 @@ class AppsFragment : Fragment() {
     }
 
     private fun isDownAndUp(point: Point, e: MotionEvent) {
+        if (this::appsAdapter.isInitialized && appsAdapter.selectMode) return
         val min = 10
         val y = point.y
         val yU = y - e.rawY
@@ -182,8 +194,61 @@ class AppsFragment : Fragment() {
         mAdapter.notifyItemMoved(fromPosition, toPosition)
     }
 
+    /** 批量删除：长按一个分身进多选，再点别的分身勾上，底部一键删 */
+    private fun enterSelectionMode(first: AppInfo) {
+        appsAdapter.selectMode = true
+        appsAdapter.selected.add(appsAdapter.selectionKey(first))
+        mAdapter.notifyDataSetChanged()
+        viewBinding.batchBar.visibility = View.VISIBLE
+        (requireActivity() as MainActivity).showFloatButton(false)
+        updateBatchBar()
+    }
+
+    private fun exitSelectionMode() {
+        appsAdapter.selectMode = false
+        appsAdapter.selected.clear()
+        mAdapter.notifyDataSetChanged()
+        viewBinding.batchBar.visibility = View.GONE
+        (requireActivity() as MainActivity).showFloatButton(true)
+    }
+
+    private fun toggleSelection(data: AppInfo, position: Int) {
+        val key = appsAdapter.selectionKey(data)
+        if (!appsAdapter.selected.remove(key)) appsAdapter.selected.add(key)
+        mAdapter.notifyItemChanged(position)
+        updateBatchBar()
+    }
+
+    private fun updateBatchBar() {
+        viewBinding.batchDelete.text =
+            getString(R.string.delete_selected, appsAdapter.selected.size.toString())
+    }
+
+    private fun deleteSelected() {
+        val items = mAdapter.getItems()
+            .filter { appsAdapter.selected.contains(appsAdapter.selectionKey(it)) }
+        if (items.isEmpty()) {
+            exitSelectionMode()
+            return
+        }
+        MaterialDialog(requireContext()).show {
+            title(R.string.batch_delete_title)
+            message(text = getString(R.string.batch_delete_hint, items.size.toString()))
+            positiveButton(R.string.done) {
+                exitSelectionMode()
+                showLoading(getString(R.string.batch_deleting))
+                viewModel.unInstallBatch(items, userID)
+            }
+            negativeButton(R.string.cancel)
+        }
+    }
+
     private fun setOnLongClick() {
-        mAdapter.setItemLongClickListener { view, data, _ ->
+        mAdapter.setItemLongClickListener { view, data, position ->
+            if (appsAdapter.selectMode) {
+                toggleSelection(data, position)
+                return@setItemLongClickListener
+            }
             popupMenu = PopupMenu(requireContext(),view).also {
                 it.inflate(R.menu.app_menu)
                 it.setOnMenuItemClickListener { item ->
@@ -214,6 +279,10 @@ class AppsFragment : Fragment() {
 
                         R.id.app_rename -> {
                             showRenameDialog(data)
+                        }
+
+                        R.id.app_batch_delete -> {
+                            enterSelectionMode(data)
                         }
                     }
                     return@setOnMenuItemClickListener true
