@@ -65,6 +65,10 @@
     <string name="batch_delete_done">Deleted %1$s clones</string>
     <string name="batch_delete_partial">Deleted %1$s, %2$s failed</string>
     <string name="batch_deleting">Deleting, please wait…</string>
+    <string name="crash_last_title">Why it crashed last time</string>
+    <string name="copy_text">Copy</string>
+    <string name="copy_done">Copied</string>
+    <string name="crash_clear">Clear log</string>
     <string name="app_hotfix">Hot-Fix Config</string>
     <string name="hotfix_dialog_title">Hot-Fix Patch</string>
     <string name="hotfix_dialog_hint_none">No patch configured. Pick a .dex/.apk/.jar patch file; its classes will be injected in front of the original dex on next app start.</string>

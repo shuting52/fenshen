@@ -21,6 +21,7 @@ import top.niunaijun.blackbox.BlackBoxCore
 import top.niunaijun.blackbox.core.env.BEnvironment
 import top.niunaijun.blackboxa.R
 import top.niunaijun.blackboxa.app.CloneSpace
+import top.niunaijun.blackboxa.app.CrashLog
 import top.niunaijun.blackboxa.bean.AppInfo
 import top.niunaijun.blackboxa.databinding.FragmentAppsBinding
 import top.niunaijun.blackboxa.util.InjectionUtil
@@ -82,6 +83,7 @@ class AppsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
 
+        CrashLog.bread("AppsFragment onCreateView userId=$userID")
         viewBinding.stateView.showEmpty()
 
         appsAdapter = AppsAdapter()
@@ -125,6 +127,7 @@ class AppsFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
+        CrashLog.bread("AppsFragment onStart userId=$userID")
         viewModel.getInstalledApps(userID)
     }
 

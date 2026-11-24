@@ -5,6 +5,7 @@ import android.view.ViewGroup
 import cbfg.rvadapter.RVHolder
 import cbfg.rvadapter.RVHolderFactory
 import top.niunaijun.blackboxa.R
+import top.niunaijun.blackboxa.app.CrashLog
 import top.niunaijun.blackboxa.bean.AppInfo
 import top.niunaijun.blackboxa.databinding.ItemAppBinding
 
@@ -16,6 +17,8 @@ import top.niunaijun.blackboxa.databinding.ItemAppBinding
  */
 
 class AppsAdapter : RVHolderFactory() {
+
+    private var firstBindLogged = false
 
     /** 批量删除：多选模式 + 已选中的分身（包名|用户 id） */
     var selectMode: Boolean = false
@@ -34,6 +37,10 @@ class AppsAdapter : RVHolderFactory() {
         val binding = ItemAppBinding.bind(itemView)
 
         override fun setContent(item: AppInfo, isSelected: Boolean, payload: Any?) {
+            if (!firstBindLogged) {
+                firstBindLogged = true
+                CrashLog.bread("AppsAdapter first bind ${item.packageName}")
+            }
             binding.icon.setImageDrawable(item.icon)
             binding.name.text = item.name
             if(item.isXpModule){

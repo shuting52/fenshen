@@ -5,6 +5,8 @@ import android.animation.ValueAnimator
 import android.app.Dialog
 import android.app.DownloadManager
 import android.content.BroadcastReceiver
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -44,6 +46,7 @@ import top.niunaijun.blackboxa.R
 import top.niunaijun.blackboxa.app.App
 import top.niunaijun.blackboxa.app.AppManager
 import top.niunaijun.blackboxa.app.CloneSpace
+import top.niunaijun.blackboxa.app.CrashLog
 import top.niunaijun.blackboxa.databinding.ActivityMainBinding
 import top.niunaijun.blackboxa.util.InjectionUtil
 import top.niunaijun.blackboxa.util.Resolution
@@ -117,13 +120,17 @@ class MainActivity : LoadingActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        showCrashLogIfAny()
+        CrashLog.bread("MainActivity onCreate")
         setContentView(viewBinding.root)
+        CrashLog.bread("MainActivity setContentView ok")
         previewInstalledAppList()
         setupBlur()
         initToolbar(viewBinding.toolbarLayout.toolbar, R.string.app_name)
         // 顶栏只留空间名副标题，“淑婷分身”标题字不要了
         viewBinding.toolbarLayout.toolbar.title = ""
         initViewPager()
+        CrashLog.bread("MainActivity initViewPager ok")
         initFab()
         initToolbarSubTitle()
         // 液态玻璃：后台先把模糊壁纸准备好，卡片画出来就是透镜
@@ -134,6 +141,27 @@ class MainActivity : LoadingActivity() {
             IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
         )
         checkAppUpdate()
+        CrashLog.bread("MainActivity onCreate ok")
+    }
+
+    /** 诊断版：上次闪退留下的记录，先弹出来，点复制发我 */
+    private fun showCrashLogIfAny() {
+        val f = CrashLog.file() ?: return
+        if (!f.exists()) return
+        val text = try { f.readText() } catch (e: Exception) { return }
+        if (!text.contains("CRASH")) return
+        val shown = if (text.length > 4000) text.takeLast(4000) else text
+        MaterialDialog(this).show {
+            title(R.string.crash_last_title)
+            message(text = shown)
+            positiveButton(R.string.copy_text) {
+                val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                cm.setPrimaryClip(ClipData.newPlainText("crash", text))
+                toast(R.string.copy_done)
+            }
+            negativeButton(R.string.crash_clear) { f.delete() }
+            neutralButton(R.string.cancel)
+        }
     }
 
     /** 回到 App 也查一次：之前只在冷启动时查，App 一直挂在后台就永远查不到新版 */

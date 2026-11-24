@@ -27,12 +27,18 @@ class App : Application() {
     override fun attachBaseContext(base: Context?) {
         super.attachBaseContext(base)
         mContext = base!!
+        CrashLog.install()
+        CrashLog.bread("App attachBaseContext")
         AppManager.doAttachBaseContext(base)
 
     }
 
     override fun onCreate() {
         super.onCreate()
+        CrashLog.bread("App onCreate start")
+        CrashLog.startWatchdog()
         AppManager.doOnCreate(mContext)
+        CrashLog.install()
+        CrashLog.bread("App onCreate ok")
     }
 }
