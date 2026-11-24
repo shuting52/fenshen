@@ -28,6 +28,8 @@ import top.niunaijun.blackboxa.view.glass.GlassWallpaper
 
 class ListActivity : BaseActivity() {
 
+    override val hasOwnGlassBackground: Boolean = true
+
     private val viewBinding: ActivityListBinding by inflate()
 
     private lateinit var mAdapter: RVAdapter<InstalledAppBean>

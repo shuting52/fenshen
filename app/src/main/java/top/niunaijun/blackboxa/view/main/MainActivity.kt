@@ -1,17 +1,31 @@
 package top.niunaijun.blackboxa.view.main
 
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
+import android.app.Dialog
 import android.app.DownloadManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.net.Uri
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
-import android.provider.Settings
+import android.os.Handler
+import android.os.Looper
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
+import android.view.Window
+import android.view.animation.LinearInterpolator
+import android.view.animation.OvershootInterpolator
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ProgressBar
+import android.widget.TextView
 import androidx.core.content.FileProvider
 import java.io.File
 import androidx.activity.result.contract.ActivityResultContracts
@@ -47,6 +61,8 @@ import top.niunaijun.blackboxa.view.setting.SettingActivity
 
 class MainActivity : LoadingActivity() {
 
+    override val hasOwnGlassBackground: Boolean = true
+
     private val viewBinding: ActivityMainBinding by inflate()
 
     private lateinit var mViewPagerAdapter: ViewPagerAdapter
@@ -61,6 +77,12 @@ class MainActivity : LoadingActivity() {
     /** 上次查更新的时间（毫秒），回到 App 时超过 10 分钟就再查一次 */
     private var lastUpdateCheckTime: Long = 0L
 
+    /** 卡通更新弹窗：打开时不为空；下载进度轮询靠它停 */
+    private var updateDialog: Dialog? = null
+    private var updatePolling: Boolean = false
+    private val updateHandler = Handler(Looper.getMainLooper())
+    private var typewriterRunnable: Runnable? = null
+
     /** 下载完成就直接调安装器，不跳浏览器 */
     private val downloadReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -74,9 +96,19 @@ class MainActivity : LoadingActivity() {
                     cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)
                 )
                 if (status == DownloadManager.STATUS_SUCCESSFUL) {
+                    updatePolling = false
+                    updateDialog?.dismiss()
                     updateApkFileName?.let { installDownloadedApk(it) }
                 } else {
-                    toast(R.string.update_download_failed)
+                    updatePolling = false
+                    updateDialog?.let { d ->
+                        d.findViewById<TextView>(R.id.update_progress_text)
+                            ?.setText(R.string.update_download_failed)
+                        d.findViewById<LinearLayout>(R.id.update_button_box)
+                            ?.visibility = View.VISIBLE
+                        d.findViewById<LinearLayout>(R.id.update_progress_box)
+                            ?.visibility = View.GONE
+                    } ?: toast(R.string.update_download_failed)
                 }
             }
             cursor.close()
@@ -177,22 +209,7 @@ class MainActivity : LoadingActivity() {
                 }
                 val htmlUrl = json.optString("html_url", "")
                 runOnUiThread {
-                    MaterialDialog(this).show {
-                        title(text = "发现新版本 $tag")
-                        message(text = body.ifEmpty { "淑婷分身有新版本。" })
-                        positiveButton(R.string.update_now) {
-                            if (apkUrl.isNullOrEmpty()) {
-                                if (htmlUrl.isNotEmpty()) {
-                                    startActivity(
-                                        Intent(Intent.ACTION_VIEW, Uri.parse(htmlUrl))
-                                    )
-                                }
-                            } else {
-                                startUpdateDownload(tag, apkUrl)
-                            }
-                        }
-                        negativeButton(R.string.cancel)
-                    }
+                    showUpdateDialog(tag, body, apkUrl, htmlUrl)
                 }
             } catch (e: Exception) {
                 // 没网 / 接口不通：自动查时不打扰，手动查时说出来
@@ -201,19 +218,10 @@ class MainActivity : LoadingActivity() {
         }.start()
     }
 
-    /** 系统下载器下载新版，下载完自动安装 */
+    /** 系统下载器下载新版：点“立即更新”就直接下，不再先跳“安装未知应用”设置页；
+     *  下载完自动调安装器。第一次安装时系统安装器自己会问一次（安卓的规定），
+     *  允许一次之后就再也不会出现。 */
     private fun startUpdateDownload(tag: String, apkUrl: String) {
-        // Android 8+：没开“允许安装未知应用”时，先去开权限，回来下次启动再弹更新
-        if (!packageManager.canRequestPackageInstalls()) {
-            toast(R.string.update_need_install_permission)
-            startActivity(
-                Intent(
-                    Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
-                    Uri.parse("package:$packageName")
-                )
-            )
-            return
-        }
         val fileName = "Shuting-Fenshen-$tag.apk"
         updateApkFileName = fileName
         val request = DownloadManager.Request(Uri.parse(apkUrl))
@@ -228,7 +236,131 @@ class MainActivity : LoadingActivity() {
             .setMimeType("application/vnd.android.package-archive")
         val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
         updateDownloadId = dm.enqueue(request)
-        toast(R.string.update_downloading)
+    }
+
+    /** 卡通动态更新弹窗：猫咪圆环转圈、猫脸上下浮动、标题弹出、更新内容打字机逐字打出。
+     *  点“立即更新”直接开始下载，弹窗里显示下载进度，下载完自动调安装器。 */
+    private fun showUpdateDialog(tag: String, body: String, apkUrl: String?, htmlUrl: String) {
+        updateDialog?.dismiss()
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.dialog_update)
+        dialog.window?.let {
+            it.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            val lp = it.attributes
+            lp?.windowAnimations = R.style.UpdateDialogAnim
+            it.attributes = lp
+            it.setDimAmount(0.5f)
+            val width = (resources.displayMetrics.widthPixels * 0.9).toInt()
+            it.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
+        }
+        dialog.setCancelable(true)
+        val ring = dialog.findViewById<ImageView>(R.id.update_cat_ring)
+        val face = dialog.findViewById<ImageView>(R.id.update_cat_face)
+        val titleView = dialog.findViewById<TextView>(R.id.update_title)
+        val messageView = dialog.findViewById<TextView>(R.id.update_message)
+        val progressBox = dialog.findViewById<LinearLayout>(R.id.update_progress_box)
+        val progressBar = dialog.findViewById<ProgressBar>(R.id.update_progress_bar)
+        val progressText = dialog.findViewById<TextView>(R.id.update_progress_text)
+        val buttonBox = dialog.findViewById<LinearLayout>(R.id.update_button_box)
+        val cancelBtn = dialog.findViewById<TextView>(R.id.update_cancel)
+        val nowBtn = dialog.findViewById<TextView>(R.id.update_now)
+
+        titleView.text = "发现新版本 $tag"
+        // 标题弹出
+        titleView.scaleX = 0.8f
+        titleView.scaleY = 0.8f
+        titleView.animate().scaleX(1f).scaleY(1f).setDuration(350)
+            .setInterpolator(OvershootInterpolator()).start()
+        // 猫咪圆环一直转，猫脸上下浮动
+        val ringAnim = ObjectAnimator.ofFloat(ring, "rotation", 0f, 360f).apply {
+            duration = 2500L
+            interpolator = LinearInterpolator()
+            repeatCount = ValueAnimator.INFINITE
+            start()
+        }
+        val faceAnim = ObjectAnimator.ofFloat(face, "translationY", 0f, -10f, 0f).apply {
+            duration = 1200L
+            repeatCount = ValueAnimator.INFINITE
+            start()
+        }
+        // 更新内容打字机逐字打出
+        val fullText = body.ifEmpty { "淑婷分身有新版本。" }
+        messageView.text = ""
+        var index = 0
+        typewriterRunnable = object : Runnable {
+            override fun run() {
+                if (index <= fullText.length && updateDialog != null) {
+                    messageView.text = fullText.substring(0, index)
+                    index++
+                    updateHandler.postDelayed(this, 25)
+                }
+            }
+        }
+        updateHandler.post(typewriterRunnable!!)
+        dialog.setOnDismissListener {
+            updatePolling = false
+            ringAnim.cancel()
+            faceAnim.cancel()
+            typewriterRunnable?.let { updateHandler.removeCallbacks(it) }
+            updateDialog = null
+        }
+
+        cancelBtn.setOnClickListener { dialog.dismiss() }
+        nowBtn.setOnClickListener {
+            if (apkUrl.isNullOrEmpty()) {
+                if (htmlUrl.isNotEmpty()) {
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(htmlUrl)))
+                }
+                dialog.dismiss()
+            } else {
+                buttonBox.visibility = View.GONE
+                progressBox.visibility = View.VISIBLE
+                progressBar.progress = 0
+                progressText.text = getString(R.string.update_downloading_percent, 0)
+                startUpdateDownload(tag, apkUrl)
+                startDownloadProgressPolling(progressBar, progressText)
+            }
+        }
+        updateDialog = dialog
+        dialog.show()
+    }
+
+    /** 下载进度轮询：每 300ms 查一次下载器，把进度写进弹窗 */
+    private fun startDownloadProgressPolling(progressBar: ProgressBar, progressText: TextView) {
+        updatePolling = true
+        Thread {
+            val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            while (updatePolling) {
+                try {
+                    val cursor = dm.query(DownloadManager.Query().setFilterById(updateDownloadId))
+                    if (cursor.moveToFirst()) {
+                        val total = cursor.getLong(
+                            cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
+                        )
+                        val done = cursor.getLong(
+                            cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)
+                        )
+                        val status = cursor.getInt(
+                            cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)
+                        )
+                        val percent = if (total > 0) (done * 100 / total).toInt() else 0
+                        runOnUiThread {
+                            progressBar.progress = percent
+                            progressText.text =
+                                getString(R.string.update_downloading_percent, percent)
+                        }
+                        if (status != DownloadManager.STATUS_PENDING &&
+                            status != DownloadManager.STATUS_RUNNING
+                        ) break
+                    }
+                    cursor.close()
+                } catch (e: Exception) {
+                    break
+                }
+                Thread.sleep(300)
+            }
+        }.start()
     }
 
     private fun installDownloadedApk(fileName: String) {

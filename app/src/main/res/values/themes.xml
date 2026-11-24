@@ -17,10 +17,26 @@
         <!-- 右上角菜单：原来没给弹窗设背景，用的默认纯黑底，改成液态玻璃 -->
         <item name="android:popupMenuStyle">@style/GlassPopupMenu</item>
         <item name="popupMenuStyle">@style/GlassPopupMenu</item>
+        <!-- 全局弹窗统一液态玻璃：所有 MaterialDialog 都走这套底和字色，不用一个个改 -->
+        <item name="md_background_color">#66121212</item>
+        <item name="md_color_title">@color/white</item>
+        <item name="md_color_content">@color/white</item>
+        <item name="md_color_button_text">@color/accent</item>
+        <item name="md_color_hint">#B3CACACA</item>
+        <item name="md_color_widget">@color/accent</item>
+        <item name="md_color_widget_unchecked">#B3CACACA</item>
+        <item name="md_divider_color">#33FFFFFF</item>
+        <item name="md_corner_radius">28dp</item>
     </style>
 
     <style name="GlassPopupMenu" parent="Widget.AppCompat.PopupMenu">
         <item name="android:popupBackground">@drawable/bg_glass_menu</item>
+    </style>
+
+    <!-- 卡通更新弹窗的进出场动画 -->
+    <style name="UpdateDialogAnim">
+        <item name="android:windowEnterAnimation">@anim/dialog_enter</item>
+        <item name="android:windowExitAnimation">@anim/dialog_exit</item>
     </style>
 
     <style name="ToolBarColorStyle" parent="ThemeOverlay.AppCompat.ActionBar">

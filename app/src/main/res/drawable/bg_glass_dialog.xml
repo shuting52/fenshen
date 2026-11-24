@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 更新弹窗的玻璃底：和卡片同一块玻璃面，圆角 28dp -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#66121212" />
+    <corners android:radius="28dp" />
+</shape>
