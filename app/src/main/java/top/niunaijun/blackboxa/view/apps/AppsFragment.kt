@@ -362,7 +362,7 @@ class AppsFragment : Fragment() {
 
 
     fun installApk(source: String, count: Int = 1) {
-        showLoading()
+        showLoading(getString(R.string.creating_clone))
         viewModel.install(source, userID, count)
     }
 
@@ -371,9 +371,9 @@ class AppsFragment : Fragment() {
         (requireActivity() as MainActivity).scanUser()
     }
 
-    private fun showLoading() {
+    private fun showLoading(text: String? = null) {
         if(requireActivity() is LoadingActivity){
-            (requireActivity() as LoadingActivity).showLoading()
+            (requireActivity() as LoadingActivity).showLoading(text)
         }
     }
 

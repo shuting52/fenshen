@@ -50,6 +50,7 @@
     <string name="check_update">检查更新</string>
     <string name="update_latest">已是最新版本</string>
     <string name="update_check_failed">检查更新失败，请检查网络</string>
+    <string name="creating_clone">正在创建，请稍等</string>
     <string name="app_hotfix">热修复配置</string>
     <string name="hotfix_dialog_title">热修复补丁</string>
     <string name="hotfix_dialog_hint_none">尚未配置补丁。选择 .dex/.apk/.jar 补丁文件，下次启动分身时补丁类会前插到原 dex 之前加载。</string>

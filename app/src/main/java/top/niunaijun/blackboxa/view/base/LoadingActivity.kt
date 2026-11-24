@@ -15,10 +15,12 @@ abstract class LoadingActivity : BaseActivity() {
     private lateinit var loadingView: CatLoadingView
 
 
-    fun showLoading() {
+    /** text 只在创建分身时传“正在创建，请稍等”；其它操作（打开、卸载、清数据）不动，还是默认的 LOADING... */
+    fun showLoading(text: String? = null) {
         if (!this::loadingView.isInitialized) {
             loadingView = CatLoadingView()
         }
+        loadingView.setText(text ?: "LOADING...")
 
         if (!loadingView.isAdded) {
             loadingView.setBackgroundColor(R.color.primary)

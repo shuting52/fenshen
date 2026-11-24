@@ -44,6 +44,7 @@
     <string name="check_update">檢查更新</string>
     <string name="update_latest">已是最新版本</string>
     <string name="update_check_failed">檢查更新失敗，請檢查網絡</string>
+    <string name="creating_clone">正在建立，請稍等</string>
     <string name="shortcut_name">快捷方式名稱</string>
     <string name="try_add_shortcut">嘗試添加到案頭</string>
     <string name="add_shortcut_fail_msg">如果添加失敗，請轉到系統設置並打開淑婷分身的“創建案頭快捷方式”許可權</string>
