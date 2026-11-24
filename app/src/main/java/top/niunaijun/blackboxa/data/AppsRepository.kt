@@ -184,7 +184,7 @@ class AppsRepository {
             var lastMsg = ""
             // 一键批量分身：装一个、再装下一个；同一个应用已在空间里时，
             // 每多一个就装进一个新创建的隐藏用户，数据完全隔离
-            repeat(count.coerceIn(1, 10)) {
+            repeat(count.coerceIn(1, 30)) {
                 var targetUserId = userId
                 if (packageName != null &&
                     CloneSpace.spaceMembers(userId).any { blackBoxCore.isInstalled(packageName, it) }

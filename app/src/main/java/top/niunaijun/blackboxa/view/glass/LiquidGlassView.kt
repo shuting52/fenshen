@@ -33,15 +33,22 @@ class LiquidGlassView @JvmOverloads constructor(
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
 
-    /** boli 玻璃面：#121212 透明度 0.40 */
+    /** 玻璃面调浅到 0.25：太黑会把透镜盖住，背景必须透出来才像玻璃 */
     private val tintPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#66121212")
+        color = Color.parseColor("#40121212")
     }
 
     private val rimPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
+        strokeWidth = Resolution.convertDpToPixel(1.5f, context)
+        color = Color.argb(140, 255, 255, 255)
+    }
+
+    /** 内圈第二道亮边：透镜边缘折得最厉害的地方最亮 */
+    private val innerRimPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
         strokeWidth = Resolution.convertDpToPixel(1f, context)
-        color = Color.argb(110, 255, 255, 255)
+        color = Color.argb(45, 255, 255, 255)
     }
 
     private val specularPaint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -49,8 +56,8 @@ class LiquidGlassView @JvmOverloads constructor(
     private val clipPath = Path()
     private val rectF = RectF()
 
-    private val meshCols = 16
-    private val meshRows = 16
+    private val meshCols = 24
+    private val meshRows = 24
     private val verts = FloatArray((meshCols + 1) * (meshRows + 1) * 2)
 
     init {
@@ -63,8 +70,8 @@ class LiquidGlassView @JvmOverloads constructor(
         clipPath.reset()
         clipPath.addRoundRect(rectF, cornerRadius, cornerRadius, Path.Direction.CW)
         specularPaint.shader = LinearGradient(
-            0f, 0f, 0f, h * 0.45f,
-            Color.argb(36, 255, 255, 255), Color.TRANSPARENT,
+            0f, 0f, 0f, h * 0.5f,
+            Color.argb(77, 255, 255, 255), Color.TRANSPARENT,
             Shader.TileMode.CLAMP
         )
     }
@@ -102,7 +109,8 @@ class LiquidGlassView @JvmOverloads constructor(
             val cx = w / 2f
             val cy = h / 2f
             val maxR = Math.hypot(cx.toDouble(), cy.toDouble()).toFloat()
-            // 网格透镜：以卡片中心为准，越靠近边缘推得越远（折射），中心几乎不动
+            // 网格透镜：以卡片中心为准，越靠近边缘推得越远（折射），中心几乎不动。
+            // 2.3.7 只推到 1.22，糊图上根本看不出来；这次推到 1.5，边缘折得狠才看得见。
             var k = 0
             for (j in 0..meshRows) {
                 for (i in 0..meshCols) {
@@ -111,7 +119,7 @@ class LiquidGlassView @JvmOverloads constructor(
                     val dx = bx - cx
                     val dy = by - cy
                     val r = Math.hypot(dx.toDouble(), dy.toDouble()).toFloat() / maxR
-                    val f = 1f + 0.22f * r * r
+                    val f = 1f + 0.5f * Math.pow(r.toDouble(), 2.5).toFloat()
                     verts[k++] = cx + dx * f
                     verts[k++] = cy + dy * f
                 }
@@ -122,9 +130,13 @@ class LiquidGlassView @JvmOverloads constructor(
             canvas.restore()
         }
 
-        // boli 玻璃面 + 顶部高光 + 一圈亮边
+        // 玻璃面 + 顶部高光 + 两圈亮边
         canvas.drawRoundRect(rectF, cornerRadius, cornerRadius, tintPaint)
         canvas.drawRoundRect(rectF, cornerRadius, cornerRadius, specularPaint)
         canvas.drawRoundRect(rectF, cornerRadius, cornerRadius, rimPaint)
+        val inset = Resolution.convertDpToPixel(4f, context)
+        val innerRect = RectF(inset, inset, w - inset, h - inset)
+        val innerRadius = (cornerRadius - inset).coerceAtLeast(0f)
+        canvas.drawRoundRect(innerRect, innerRadius, innerRadius, innerRimPaint)
     }
 }

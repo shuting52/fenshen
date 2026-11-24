@@ -10,8 +10,10 @@ import eightbitlab.com.blurview.RenderScriptBlur
 import top.niunaijun.blackboxa.R
 
 /**
- * 整屏壁纸的预模糊版：按屏幕尺寸 centerCrop + 模糊一次，全 App 共用。
+ * 整屏壁纸：按屏幕尺寸 centerCrop，只轻微模糊一次，全 App 共用。
  * 卡片上的透镜就是从这张图里取自己背后的那一块来放大。
+ * 注意：不能像 2.3.7 那样模糊到 12——图糊成一片就没东西可折，透镜就看不见了。
+ * 透镜要折的是清晰的特征，所以这里只做 3 的轻微柔化。
  */
 object GlassWallpaper {
 
@@ -62,7 +64,12 @@ object GlassWallpaper {
             val top = (sh - dh) / 2f
             canvas.drawBitmap(src, null, RectF(left, top, left + dw, top + dh), null)
             src.recycle()
-            val blurred = RenderScriptBlur(appCtx).blur(out, 12f) ?: return null
+            // 轻微柔化即可；模糊失败也别空手而归，用原图兜底，透镜照样画
+            val blurred = try {
+                RenderScriptBlur(appCtx).blur(out, 3f)
+            } catch (e: Exception) {
+                null
+            } ?: out
             if (blurred != out) out.recycle()
             cached = blurred
             return blurred

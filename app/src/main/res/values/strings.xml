@@ -41,7 +41,7 @@
     <string name="app_rename">Rename</string>
     <string name="update_download">Download</string>
     <string name="clone_count_title">Clone count</string>
-    <string name="clone_count_hint">How many clones (1-10)</string>
+    <string name="clone_count_hint">How many clones (1-30)</string>
     <string name="install_batch_success">Created %1$d clones</string>
     <string name="install_batch_partial">Created %1$d clones, %2$d failed</string>
     <string name="update_now">Update now</string>

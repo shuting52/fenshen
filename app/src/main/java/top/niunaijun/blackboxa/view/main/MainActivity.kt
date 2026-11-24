@@ -242,7 +242,7 @@ class MainActivity : LoadingActivity() {
     private fun setupBlur() {
         viewBinding.blurView.setupWith(viewBinding.root)
             .setBlurAlgorithm(RenderScriptBlur(this))
-            .setBlurRadius(16f)
+            .setBlurRadius(8f)
             .setBlurAutoUpdate(true)
             .setHasFixedTransformationMatrix(true)
         viewBinding.blurView.setOverlayColor(Color.parseColor("#66121212"))

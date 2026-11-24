@@ -59,13 +59,13 @@ class ListActivity : BaseActivity() {
     private fun setupBlurView() {
         viewBinding.blurView.setupWith(viewBinding.root)
             .setBlurAlgorithm(RenderScriptBlur(this))
-            .setBlurRadius(16f)
+            .setBlurRadius(8f)
             .setBlurAutoUpdate(true)
             .setHasFixedTransformationMatrix(true)
         viewBinding.blurView.setOverlayColor(Color.parseColor("#66121212"))
     }
 
-    /** 点一下应用：输入要创建的分身个数，一键批量分身（1-10 个） */
+    /** 点一下应用：输入要创建的分身个数，一键批量分身（1-30 个） */
     private fun showCloneCountDialog(item: InstalledAppBean) {
         MaterialDialog(this).show {
             title(R.string.clone_count_title)
@@ -74,7 +74,7 @@ class ListActivity : BaseActivity() {
                 prefill = "1",
                 inputType = InputType.TYPE_CLASS_NUMBER
             ) { _, input ->
-                val count = input.toString().toIntOrNull()?.coerceIn(1, 10) ?: 1
+                val count = input.toString().toIntOrNull()?.coerceIn(1, 30) ?: 1
                 finishWithResult(item.packageName, count)
             }
             positiveButton(R.string.done)
