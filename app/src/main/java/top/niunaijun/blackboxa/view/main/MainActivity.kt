@@ -2,10 +2,12 @@ package top.niunaijun.blackboxa.view.main
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.ViewModelProvider
 import androidx.core.content.edit
 import androidx.viewpager2.widget.ViewPager2
 import com.afollestad.materialdialogs.MaterialDialog
@@ -16,11 +18,14 @@ import top.niunaijun.blackboxa.R
 import top.niunaijun.blackboxa.app.App
 import top.niunaijun.blackboxa.app.AppManager
 import top.niunaijun.blackboxa.databinding.ActivityMainBinding
+import top.niunaijun.blackboxa.util.InjectionUtil
 import top.niunaijun.blackboxa.util.Resolution
 import top.niunaijun.blackboxa.util.inflate
 import top.niunaijun.blackboxa.util.toast
 import top.niunaijun.blackboxa.view.apps.AppsFragment
 import top.niunaijun.blackboxa.view.base.LoadingActivity
+import top.niunaijun.blackboxa.view.list.ListViewModel
+import eightbitlab.com.blurview.RenderScriptBlur
 import top.niunaijun.blackboxa.view.fake.FakeManagerActivity
 import top.niunaijun.blackboxa.view.list.ListActivity
 import top.niunaijun.blackboxa.view.setting.SettingActivity
@@ -39,10 +44,26 @@ class MainActivity : LoadingActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(viewBinding.root)
+        previewInstalledAppList()
+        setupBlur()
         initToolbar(viewBinding.toolbarLayout.toolbar, R.string.app_name)
         initViewPager()
         initFab()
         initToolbarSubTitle()
+    }
+
+    private fun previewInstalledAppList() {
+        val viewModel = ViewModelProvider(this, InjectionUtil.getListFactory()).get(ListViewModel::class.java)
+        viewModel.previewInstalledList()
+    }
+
+    private fun setupBlur() {
+        viewBinding.blurView.setupWith(viewBinding.root)
+            .setBlurAlgorithm(RenderScriptBlur(this))
+            .setBlurRadius(18f)
+            .setBlurAutoUpdate(true)
+            .setHasFixedTransformationMatrix(true)
+        viewBinding.blurView.setOverlayColor(Color.parseColor("#59181818"))
     }
 
     private fun initToolbarSubTitle() {
