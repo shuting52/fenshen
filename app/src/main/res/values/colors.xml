@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- boli 深色液态玻璃配色：底 #121212、面 #181818、字白、次字 #B3CACACA、强调 #55CFFF -->
+<!-- 浅色液态玻璃配色（2.3.16 全新界面）：底 #F7FAFF、面白、字深、强调 #0EA5E9 -->
 <resources>
-    <color name="primary">#121212</color>
-    <color name="primary_dark">#0A0A0A</color>
-    <color name="primary_light">#181818</color>
-    <color name="accent">#55CFFF</color>
-    <color name="primary_text">#FFFFFF</color>
-    <color name="secondary_text">#B3CACACA</color>
+    <color name="primary">#FFFFFF</color>
+    <color name="primary_dark">#E8EEF5</color>
+    <color name="primary_light">#F2F6FC</color>
+    <color name="accent">#0EA5E9</color>
+    <color name="primary_text">#111827</color>
+    <color name="secondary_text">#6B7280</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="background">#121212</color>
-    <color name="surface">#181818</color>
-    <!-- 玻璃卡：#181818 透明度 0.38，boli 列表卡同一档 -->
-    <color name="glass_bg">#66121212</color>
+    <color name="background">#F7FAFF</color>
+    <color name="surface">#FFFFFF</color>
+    <!-- 玻璃卡：白 透明度 0.70 -->
+    <color name="glass_bg">#B3FFFFFF</color>
     <color name="brand_green">#16A34A</color>
     <color name="brand_blue">#0EA5E9</color>
     <color name="brand_indigo">#6366F1</color>

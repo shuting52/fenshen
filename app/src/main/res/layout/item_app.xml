@@ -40,7 +40,7 @@
                     android:layout_height="24dp"
                     android:layout_gravity="top|start"
                     android:visibility="invisible"
-                    app:bg_color="@color/primary"
+                    app:bg_color="@color/brand_blue"
                     app:position="left_top"
                     app:side_length="22dp"
                     app:text="XP"
@@ -54,10 +54,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:textColor="@color/primary_text"
-                android:shadowColor="#B3000000"
-                android:shadowDx="0"
-                android:shadowDy="2"
-                android:shadowRadius="6"
                 android:textSize="12sp" />
 
     </LinearLayout>

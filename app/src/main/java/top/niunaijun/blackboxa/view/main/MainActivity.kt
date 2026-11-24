@@ -133,6 +133,8 @@ class MainActivity : LoadingActivity() {
         // 里 getChildAt(1) 拿到空就崩了（2.3.12/2.3.13 启动闪退的根因）。
         // 设成一个空格：看着没字，View 还在，位置不错位。
         viewBinding.toolbarLayout.toolbar.title = " "
+        // 连 Activity 自身的标题也清成空格：不然系统启动后会按应用名把它写回顶栏
+        title = " "
         initViewPager()
         CrashLog.bread("MainActivity initViewPager ok")
         initFab()
@@ -435,7 +437,7 @@ class MainActivity : LoadingActivity() {
             .setBlurRadius(8f)
             .setBlurAutoUpdate(true)
             .setHasFixedTransformationMatrix(true)
-        viewBinding.blurView.setOverlayColor(Color.parseColor("#66121212"))
+        viewBinding.blurView.setOverlayColor(Color.parseColor("#66FFFFFF"))
     }
 
     private fun initToolbarSubTitle() {

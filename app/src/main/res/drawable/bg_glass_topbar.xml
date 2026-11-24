@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 顶栏液态玻璃条：半透明深色，下沿圆角，像一块贴在顶上的玻璃 -->
+<!-- 顶栏浅色玻璃条：白 0.80，下沿圆角，像一块贴在顶上的玻璃 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="#66121212" />
+    <solid android:color="#CCFFFFFF" />
     <corners
         android:bottomLeftRadius="24dp"
         android:bottomRightRadius="24dp"

@@ -35,7 +35,7 @@ class LiquidGlassView @JvmOverloads constructor(
 
     /** 玻璃面调浅到 0.25：太黑会把透镜盖住，背景必须透出来才像玻璃 */
     private val tintPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#40121212")
+        color = Color.parseColor("#59FFFFFF")
     }
 
     private val rimPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {

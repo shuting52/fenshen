@@ -22,9 +22,9 @@ class ShimmerTextView @JvmOverloads constructor(
 
     private val gradientColors = intArrayOf(
         Color.parseColor("#16A34A"),
-        Color.parseColor("#0EA5E9"),
-        Color.parseColor("#6366F1"),
-        Color.parseColor("#FFFFFF"),
+        Color.parseColor("#0284C7"),
+        Color.parseColor("#4F46E5"),
+        Color.parseColor("#BAE6FD"),
         Color.parseColor("#16A34A")
     )
     private val gradientPositions = floatArrayOf(0f, 0.35f, 0.6f, 0.8f, 1f)

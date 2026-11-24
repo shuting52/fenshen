@@ -71,7 +71,7 @@ open class BaseActivity : AppCompatActivity() {
             .setBlurRadius(8f)
             .setBlurAutoUpdate(true)
             .setHasFixedTransformationMatrix(true)
-            .setOverlayColor(0x66121212)
+            .setOverlayColor(0x66FFFFFF)
     }
 
     protected fun initToolbar(toolbar: Toolbar,title:Int, showBack: Boolean = false, onBack: (() -> Unit)? = null) {

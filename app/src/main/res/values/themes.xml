@@ -1,31 +1,32 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- boli 深色液态主题：深底 + 白字，状态栏跟底色走 -->
+    <!-- 浅色液态主题（2.3.16 全新界面）：亮底 + 深字，状态栏浅底配深色图标 -->
     <style name="Theme.BlackBox" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/primary</item>
-        <item name="colorPrimaryVariant">@color/primary_dark</item>
+        <item name="colorPrimary">@color/brand_blue</item>
+        <item name="colorPrimaryVariant">#0284C7</item>
         <item name="colorOnPrimary">@color/white</item>
         <item name="colorSecondary">@color/accent</item>
-        <item name="colorSecondaryVariant">@color/primary</item>
+        <item name="colorSecondaryVariant">@color/brand_blue</item>
         <item name="colorOnSecondary">@color/white</item>
         <item name="colorSurface">@color/surface</item>
         <item name="android:windowBackground">@color/background</item>
         <item name="android:textColorPrimary">@color/primary_text</item>
         <item name="android:textColorSecondary">@color/secondary_text</item>
-        <item name="android:statusBarColor" tools:targetApi="l">@color/primary_dark</item>
-        <item name="actionMenuTextColor">@color/white</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/background</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
+        <item name="actionMenuTextColor">@color/primary_text</item>
         <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
-        <!-- 右上角菜单：原来没给弹窗设背景，用的默认纯黑底，改成液态玻璃 -->
+        <!-- 右上角菜单：白色液态玻璃底 -->
         <item name="android:popupMenuStyle">@style/GlassPopupMenu</item>
         <item name="popupMenuStyle">@style/GlassPopupMenu</item>
-        <!-- 全局弹窗统一液态玻璃：所有 MaterialDialog 都走这套底和字色，不用一个个改 -->
-        <item name="md_background_color">#66121212</item>
-        <item name="md_color_title">@color/white</item>
-        <item name="md_color_content">@color/white</item>
+        <!-- 全局弹窗统一浅色液态玻璃 -->
+        <item name="md_background_color">@color/glass_bg</item>
+        <item name="md_color_title">@color/primary_text</item>
+        <item name="md_color_content">@color/primary_text</item>
         <item name="md_color_button_text">@color/accent</item>
-        <item name="md_color_hint">#B3CACACA</item>
+        <item name="md_color_hint">@color/secondary_text</item>
         <item name="md_color_widget">@color/accent</item>
-        <item name="md_color_widget_unchecked">#B3CACACA</item>
-        <item name="md_divider_color">#33FFFFFF</item>
+        <item name="md_color_widget_unchecked">@color/secondary_text</item>
+        <item name="md_divider_color">#1F000000</item>
         <item name="md_corner_radius">28dp</item>
     </style>
 
@@ -40,8 +41,8 @@
     </style>
 
     <style name="ToolBarColorStyle" parent="ThemeOverlay.AppCompat.ActionBar">
-        <item name="actionMenuTextColor">@color/white</item>
-        <item name="colorControlNormal">@color/white</item>
+        <item name="actionMenuTextColor">@color/primary_text</item>
+        <item name="colorControlNormal">@color/primary_text</item>
         <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
     </style>
 
