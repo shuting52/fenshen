@@ -43,6 +43,10 @@
     <string name="clone_count_hint">输入要创建的分身个数（1-10）</string>
     <string name="install_batch_success">已创建 %1$d 个分身</string>
     <string name="install_batch_partial">已创建 %1$d 个分身，%2$d 个失败</string>
+    <string name="update_now">立即更新</string>
+    <string name="update_downloading">正在下载新版本，下载完自动安装</string>
+    <string name="update_need_install_permission">请先允许安装未知应用，再回来更新</string>
+    <string name="update_download_failed">下载失败，请重试</string>
     <string name="app_hotfix">热修复配置</string>
     <string name="hotfix_dialog_title">热修复补丁</string>
     <string name="hotfix_dialog_hint_none">尚未配置补丁。选择 .dex/.apk/.jar 补丁文件，下次启动分身时补丁类会前插到原 dex 之前加载。</string>

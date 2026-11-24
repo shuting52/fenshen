@@ -23,6 +23,7 @@ import top.niunaijun.blackboxa.databinding.ActivityListBinding
 import top.niunaijun.blackboxa.util.InjectionUtil
 import top.niunaijun.blackboxa.util.inflate
 import top.niunaijun.blackboxa.view.base.BaseActivity
+import top.niunaijun.blackboxa.view.glass.GlassWallpaper
 
 
 class ListActivity : BaseActivity() {
@@ -40,6 +41,7 @@ class ListActivity : BaseActivity() {
         setContentView(viewBinding.root)
 
         initToolbar(viewBinding.toolbarLayout.toolbar, R.string.installed_app, true)
+        Thread { GlassWallpaper.prepare(this) }.start()
         setupBlurView()
 
         mAdapter = RVAdapter<InstalledAppBean>(this,ListAdapter()).bind(viewBinding.recyclerView).setItemClickListener { _, item, _ ->

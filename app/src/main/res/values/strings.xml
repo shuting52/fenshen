@@ -44,6 +44,10 @@
     <string name="clone_count_hint">How many clones (1-10)</string>
     <string name="install_batch_success">Created %1$d clones</string>
     <string name="install_batch_partial">Created %1$d clones, %2$d failed</string>
+    <string name="update_now">Update now</string>
+    <string name="update_downloading">Downloading the update, it will install when done</string>
+    <string name="update_need_install_permission">Please allow installing unknown apps first, then update</string>
+    <string name="update_download_failed">Download failed, please retry</string>
     <string name="app_hotfix">Hot-Fix Config</string>
     <string name="hotfix_dialog_title">Hot-Fix Patch</string>
     <string name="hotfix_dialog_hint_none">No patch configured. Pick a .dex/.apk/.jar patch file; its classes will be injected in front of the original dex on next app start.</string>

@@ -37,6 +37,10 @@
     <string name="clone_count_hint">輸入要建立的分身個數（1-10）</string>
     <string name="install_batch_success">已建立 %1$d 個分身</string>
     <string name="install_batch_partial">已建立 %1$d 個分身，%2$d 個失敗</string>
+    <string name="update_now">立即更新</string>
+    <string name="update_downloading">正在下載新版本，下載完自動安裝</string>
+    <string name="update_need_install_permission">請先允許安裝未知應用，再回來更新</string>
+    <string name="update_download_failed">下載失敗，請重試</string>
     <string name="shortcut_name">快捷方式名稱</string>
     <string name="try_add_shortcut">嘗試添加到案頭</string>
     <string name="add_shortcut_fail_msg">如果添加失敗，請轉到系統設置並打開淑婷分身的“創建案頭快捷方式”許可權</string>

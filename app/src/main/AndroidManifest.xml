@@ -4,6 +4,8 @@
     package="top.niunaijun.blackboxa">
     <!-- Android 11 需要 -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <!-- 应用内直接下载更新并安装需要 -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
         android:name=".app.App"
@@ -15,6 +17,16 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.BlackBox"
         tools:targetApi="n">
+        <provider
+                android:name="androidx.core.content.FileProvider"
+                android:authorities="${applicationId}.fileprovider"
+                android:exported="false"
+                android:grantUriPermissions="true">
+            <meta-data
+                    android:name="android.support.FILE_PROVIDER_PATHS"
+                    android:resource="@xml/file_paths" />
+        </provider>
+
         <activity
             android:name=".view.fake.FollowMyLocationOverlay"
             android:exported="false" />
