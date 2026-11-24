@@ -2,6 +2,7 @@ package top.niunaijun.blackboxa.view.main
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.graphics.Color
 import android.os.Bundle
 import android.view.Menu
@@ -11,9 +12,13 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.core.content.edit
 import androidx.viewpager2.widget.ViewPager2
 import com.afollestad.materialdialogs.MaterialDialog
+import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
 import com.afollestad.materialdialogs.input.input
 import top.niunaijun.blackbox.BlackBoxCore
 import top.niunaijun.blackbox.fake.frameworks.BXposedManager
+import top.niunaijun.blackboxa.BuildConfig
 import top.niunaijun.blackboxa.R
 import top.niunaijun.blackboxa.app.App
 import top.niunaijun.blackboxa.app.AppManager
@@ -51,6 +56,51 @@ class MainActivity : LoadingActivity() {
         initViewPager()
         initFab()
         initToolbarSubTitle()
+        checkAppUpdate()
+    }
+
+    /** 启动时查一次 fenshen 仓库的最新 Release，有新版就弹更新提醒；没网或查不到就静默跳过 */
+    private fun checkAppUpdate() {
+        Thread {
+            try {
+                val conn = URL("https://api.github.com/repos/shuting52/fenshen/releases/latest")
+                    .openConnection() as HttpURLConnection
+                conn.connectTimeout = 8000
+                conn.readTimeout = 8000
+                conn.setRequestProperty("Accept", "application/vnd.github+json")
+                if (conn.responseCode != 200) return@Thread
+                val json = JSONObject(conn.inputStream.bufferedReader().readText())
+                val tag = json.optString("tag_name", "").trimStart('v')
+                val htmlUrl = json.optString("html_url", "")
+                val body = json.optString("body", "")
+                if (tag.isEmpty() || htmlUrl.isEmpty()) return@Thread
+                if (!isNewerVersion(tag, BuildConfig.VERSION_NAME)) return@Thread
+                runOnUiThread {
+                    MaterialDialog(this).show {
+                        title(text = "发现新版本 $tag")
+                        message(text = body.ifEmpty { "淑婷分身有新版本，去下载更新。" })
+                        positiveButton(R.string.update_download) {
+                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(htmlUrl)))
+                        }
+                        negativeButton(R.string.cancel)
+                    }
+                }
+            } catch (e: Exception) {
+                // 没网 / 接口不通：不打扰
+            }
+        }.start()
+    }
+
+    private fun isNewerVersion(latest: String, current: String): Boolean {
+        val l = latest.split(".").map { it.toIntOrNull() ?: 0 }
+        val c = current.split(".").map { it.toIntOrNull() ?: 0 }
+        val size = maxOf(l.size, c.size)
+        for (i in 0 until size) {
+            val lv = l.getOrElse(i) { 0 }
+            val cv = c.getOrElse(i) { 0 }
+            if (lv != cv) return lv > cv
+        }
+        return false
     }
 
     private fun previewInstalledAppList() {

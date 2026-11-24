@@ -15,18 +15,18 @@ android {
     buildToolsVersion "29.0.2"
 
     defaultConfig {
-        applicationId "top.niunaijun.blackboxa"
+        applicationId "mis.shuting.fensheng"
         minSdkVersion 21
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 19
-        versionName "2.3.4"
+        versionCode 20
+        versionName "2.3.5"
 
         flavorDimensions "BlackBox32"
     }
 
     productFlavors {
         BlackBox32 {
-            applicationId "top.niunaijun.blackboxa32"
+            applicationId "mis.shuting.fensheng"
             ndk {
                 abiFilters "armeabi-v7a"
             }
@@ -36,7 +36,7 @@ android {
         }
 
         BlackBox64 {
-            applicationId "top.niunaijun.blackboxa64"
+            applicationId "mis.shuting.fensheng"
             ndk {
                 abiFilters "arm64-v8a"
             }
@@ -46,7 +46,7 @@ android {
         }
 
         BlackBox32Beta {
-            applicationId "top.niunaijun.blackboxa32_beta"
+            applicationId "mis.shuting.fensheng"
             ndk {
                 abiFilters "armeabi-v7a"
             }
@@ -56,7 +56,7 @@ android {
         }
 
         BlackBox64Beta {
-            applicationId "top.niunaijun.blackboxa64_beta"
+            applicationId "mis.shuting.fensheng"
             ndk {
                 abiFilters "arm64-v8a"
             }
