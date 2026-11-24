@@ -171,33 +171,55 @@ class AppsRepository {
     }
 
 
-    fun installApk(source: String, userId: Int, resultLiveData: MutableLiveData<String>) {
+    fun installApk(
+        source: String,
+        userId: Int,
+        resultLiveData: MutableLiveData<String>,
+        count: Int = 1
+    ) {
         val blackBoxCore = BlackBoxCore.get()
         try {
-            // 同一个应用已在空间里时，装进一个新创建的隐藏用户，数据完全隔离
-            var targetUserId = userId
             val packageName = resolvePackageName(source)
-            if (packageName != null &&
-                CloneSpace.spaceMembers(userId).any { blackBoxCore.isInstalled(packageName, it) }
-            ) {
-                targetUserId = CloneSpace.nextCloneUserId()
-            }
-
-            val installResult = if (URLUtil.isValidUrl(source)) {
-                val uri = Uri.parse(source)
-                blackBoxCore.installPackageAsUser(uri, targetUserId)
-            } else {
-                blackBoxCore.installPackageAsUser(source, targetUserId)
-            }
-
-            if (installResult.success) {
-                if (targetUserId != userId) {
-                    CloneSpace.addCloneUser(userId, targetUserId)
+            var created = 0
+            var lastMsg = ""
+            // 一键批量分身：装一个、再装下一个；同一个应用已在空间里时，
+            // 每多一个就装进一个新创建的隐藏用户，数据完全隔离
+            repeat(count.coerceIn(1, 10)) {
+                var targetUserId = userId
+                if (packageName != null &&
+                    CloneSpace.spaceMembers(userId).any { blackBoxCore.isInstalled(packageName, it) }
+                ) {
+                    targetUserId = CloneSpace.nextCloneUserId()
                 }
-                updateAppSortList(userId, installResult.packageName, true)
-                resultLiveData.postValue(getString(R.string.install_success))
-            } else {
-                resultLiveData.postValue(getString(R.string.install_fail, installResult.msg))
+
+                val installResult = if (URLUtil.isValidUrl(source)) {
+                    val uri = Uri.parse(source)
+                    blackBoxCore.installPackageAsUser(uri, targetUserId)
+                } else {
+                    blackBoxCore.installPackageAsUser(source, targetUserId)
+                }
+
+                if (installResult.success) {
+                    if (targetUserId != userId) {
+                        CloneSpace.addCloneUser(userId, targetUserId)
+                    }
+                    updateAppSortList(userId, installResult.packageName, true)
+                    created++
+                } else {
+                    lastMsg = installResult.msg
+                }
+            }
+            when {
+                created == count -> {
+                    if (count == 1) resultLiveData.postValue(getString(R.string.install_success))
+                    else resultLiveData.postValue(
+                        getString(R.string.install_batch_success, created.toString())
+                    )
+                }
+                created > 0 -> resultLiveData.postValue(
+                    getString(R.string.install_batch_partial, created.toString(), (count - created).toString())
+                )
+                else -> resultLiveData.postValue(getString(R.string.install_fail, lastMsg))
             }
         } catch (e: Exception) {
             resultLiveData.postValue(getString(R.string.install_fail, e.message ?: e.javaClass.simpleName))

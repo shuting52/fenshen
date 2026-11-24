@@ -361,9 +361,9 @@ class AppsFragment : Fragment() {
     }
 
 
-    fun installApk(source: String) {
+    fun installApk(source: String, count: Int = 1) {
         showLoading()
-        viewModel.install(source, userID)
+        viewModel.install(source, userID, count)
     }
 
 

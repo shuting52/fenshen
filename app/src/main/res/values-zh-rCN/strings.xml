@@ -39,6 +39,10 @@
     <string name="app_shortcut">创建快捷方式</string>
     <string name="app_rename">重命名</string>
     <string name="update_download">去下载</string>
+    <string name="clone_count_title">分身数量</string>
+    <string name="clone_count_hint">输入要创建的分身个数（1-10）</string>
+    <string name="install_batch_success">已创建 %1$d 个分身</string>
+    <string name="install_batch_partial">已创建 %1$d 个分身，%2$d 个失败</string>
     <string name="app_hotfix">热修复配置</string>
     <string name="hotfix_dialog_title">热修复补丁</string>
     <string name="hotfix_dialog_hint_none">尚未配置补丁。选择 .dex/.apk/.jar 补丁文件，下次启动分身时补丁类会前插到原 dex 之前加载。</string>

@@ -29,9 +29,9 @@ class AppsViewModel(private val repo: AppsRepository) : BaseViewModel() {
         }
     }
 
-    fun install(source: String, userID: Int) {
+    fun install(source: String, userID: Int, count: Int = 1) {
         launchOnUI {
-            repo.installApk(source, userID, resultLiveData)
+            repo.installApk(source, userID, resultLiveData, count)
         }
     }
 

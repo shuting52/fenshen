@@ -111,7 +111,7 @@ class MainActivity : LoadingActivity() {
     private fun setupBlur() {
         viewBinding.blurView.setupWith(viewBinding.root)
             .setBlurAlgorithm(RenderScriptBlur(this))
-            .setBlurRadius(4f)
+            .setBlurRadius(16f)
             .setBlurAutoUpdate(true)
             .setHasFixedTransformationMatrix(true)
         viewBinding.blurView.setOverlayColor(Color.parseColor("#66121212"))
@@ -208,8 +208,9 @@ class MainActivity : LoadingActivity() {
                 it.data?.let { data ->
                     val userId = data.getIntExtra("userID", 0)
                     val source = data.getStringExtra("source")
+                    val count = data.getIntExtra("count", 1)
                     if (source != null) {
-                        fragmentList[userId].installApk(source)
+                        fragmentList[userId].installApk(source, count)
                     }
                 }
 

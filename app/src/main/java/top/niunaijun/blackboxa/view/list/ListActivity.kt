@@ -3,6 +3,8 @@ package top.niunaijun.blackboxa.view.list
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.text.InputType
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -11,6 +13,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import cbfg.rvadapter.RVAdapter
+import com.afollestad.materialdialogs.MaterialDialog
+import com.afollestad.materialdialogs.input.input
+import eightbitlab.com.blurview.RenderScriptBlur
 import com.ferfalk.simplesearchview.SimpleSearchView
 import top.niunaijun.blackboxa.R
 import top.niunaijun.blackboxa.bean.InstalledAppBean
@@ -35,9 +40,10 @@ class ListActivity : BaseActivity() {
         setContentView(viewBinding.root)
 
         initToolbar(viewBinding.toolbarLayout.toolbar, R.string.installed_app, true)
+        setupBlurView()
 
         mAdapter = RVAdapter<InstalledAppBean>(this,ListAdapter()).bind(viewBinding.recyclerView).setItemClickListener { _, item, _ ->
-            finishWithResult(item.packageName)
+            showCloneCountDialog(item)
         }
 
         viewBinding.recyclerView.layoutManager = LinearLayoutManager(this)
@@ -45,6 +51,33 @@ class ListActivity : BaseActivity() {
 
         initSearchView()
         initViewModel()
+    }
+
+    /** 整屏磨砂玻璃：壁纸 + 强模糊 + boli 玻璃面 */
+    private fun setupBlurView() {
+        viewBinding.blurView.setupWith(viewBinding.root)
+            .setBlurAlgorithm(RenderScriptBlur(this))
+            .setBlurRadius(16f)
+            .setBlurAutoUpdate(true)
+            .setHasFixedTransformationMatrix(true)
+        viewBinding.blurView.setOverlayColor(Color.parseColor("#66121212"))
+    }
+
+    /** 点一下应用：输入要创建的分身个数，一键批量分身（1-10 个） */
+    private fun showCloneCountDialog(item: InstalledAppBean) {
+        MaterialDialog(this).show {
+            title(R.string.clone_count_title)
+            input(
+                hintRes = R.string.clone_count_hint,
+                prefill = "1",
+                inputType = InputType.TYPE_CLASS_NUMBER
+            ) { _, input ->
+                val count = input.toString().toIntOrNull()?.coerceIn(1, 10) ?: 1
+                finishWithResult(item.packageName, count)
+            }
+            positiveButton(R.string.done)
+            negativeButton(R.string.cancel)
+        }
     }
 
     private fun initSearchView() {
@@ -115,8 +148,9 @@ class ListActivity : BaseActivity() {
         }
     }
 
-    private fun finishWithResult(source: String) {
+    private fun finishWithResult(source: String, count: Int = 1) {
         intent.putExtra("source", source)
+        intent.putExtra("count", count)
         setResult(Activity.RESULT_OK, intent)
         val imm: InputMethodManager = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         window.peekDecorView()?.run {
