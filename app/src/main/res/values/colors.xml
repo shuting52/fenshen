@@ -1,10 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- boli 深色液态玻璃配色：底 #121212、面 #181818、字白、次字 #B3CACACA、强调 #55CFFF -->
 <resources>
-    <color name="primary">#3F3F3F</color>
-    <color name="primary_dark">#3F3F3F</color>
-    <color name="primary_light">#3F3F3F</color>
-    <color name="accent">#ffffff</color>
-    <color name="primary_text">#212121</color>
-    <color name="secondary_text">#757575</color>
+    <color name="primary">#121212</color>
+    <color name="primary_dark">#0A0A0A</color>
+    <color name="primary_light">#181818</color>
+    <color name="accent">#55CFFF</color>
+    <color name="primary_text">#FFFFFF</color>
+    <color name="secondary_text">#B3CACACA</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="background">#121212</color>
+    <color name="surface">#181818</color>
+    <!-- 玻璃卡：#181818 透明度 0.38，boli 列表卡同一档 -->
+    <color name="glass_bg">#61181818</color>
+    <color name="glass_border">#1FFFFFFF</color>
+    <color name="brand_green">#16A34A</color>
+    <color name="brand_blue">#0EA5E9</color>
+    <color name="brand_indigo">#6366F1</color>
+    <color name="success">#22C55E</color>
+    <color name="danger">#EF4444</color>
 </resources>

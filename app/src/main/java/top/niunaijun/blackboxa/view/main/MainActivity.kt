@@ -2,7 +2,6 @@ package top.niunaijun.blackboxa.view.main
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -157,20 +156,9 @@ class MainActivity : LoadingActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when (item?.itemId) {
-            R.id.main_git -> {
-                val intent =
-                    Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/FBlackBox/BlackBox"))
-                startActivity(intent)
-            }
 
             R.id.main_setting -> {
                 SettingActivity.start(this)
-            }
-
-            R.id.main_tg -> {
-                val intent =
-                    Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/fvblackbox"))
-                startActivity(intent)
             }
 
             R.id.fake_location -> {

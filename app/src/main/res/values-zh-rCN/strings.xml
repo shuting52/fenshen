@@ -6,9 +6,7 @@
     <string name="installed_module">已安装模块</string>
     <string name="empty_empty">空空如也</string>
     <string name="filter">过滤</string>
-    <string name="open_source_path">开源地址</string>
     <string name="xp_setting">XP管理</string>
-    <string name="tg_group">交流群</string>
     <string name="setting">软件设置</string>
     <string name="refresh_process">刷新进程</string>
     <string name="refresh_process_done">容器进程已全部结束，下次启动加载最新配置</string>
@@ -53,7 +51,7 @@
     <string name="hotfix_clear_fail">移除补丁失败</string>
     <string name="shortcut_name">快捷方式名称</string>
     <string name="try_add_shortcut">已尝试添加到桌面</string>
-    <string name="add_shortcut_fail_msg">若添加失败，请前往系统设置，为BlackBox打开"创建桌面快捷方式"的权限</string>
+    <string name="add_shortcut_fail_msg">若添加失败，请前往系统设置，为淑婷分身打开"创建桌面快捷方式"的权限</string>
     <string name="no_reminders">不再提醒</string>
     <string name="install_success">安装成功</string>
     <string name="install_fail">安装失败 : %s</string>
