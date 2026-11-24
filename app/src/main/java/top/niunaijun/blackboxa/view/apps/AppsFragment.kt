@@ -310,13 +310,13 @@ class AppsFragment : Fragment() {
         }
 
         viewModel.resultLiveData.observe(viewLifecycleOwner) {
+            // 空消息也算一次结果：先关加载框、刷新列表；有文字才弹提示（安装失败不弹窗）
+            hideLoading()
             if (!TextUtils.isEmpty(it)) {
-                hideLoading()
                 requireContext().toast(it)
-                viewModel.getInstalledApps(userID)
-                scanUser()
             }
-
+            viewModel.getInstalledApps(userID)
+            scanUser()
         }
 
         viewModel.launchLiveData.observe(viewLifecycleOwner) {

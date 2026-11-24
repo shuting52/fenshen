@@ -16,6 +16,7 @@ import top.niunaijun.blackboxa.R
 import top.niunaijun.blackboxa.app.App
 import top.niunaijun.blackboxa.app.AppManager
 import top.niunaijun.blackboxa.app.CloneSpace
+import top.niunaijun.blackboxa.app.CrashLog
 import top.niunaijun.blackboxa.bean.AppInfo
 import top.niunaijun.blackboxa.bean.InstalledAppBean
 import top.niunaijun.blackboxa.util.getString
@@ -219,10 +220,15 @@ class AppsRepository {
                 created > 0 -> resultLiveData.postValue(
                     getString(R.string.install_batch_partial, created.toString(), (count - created).toString())
                 )
-                else -> resultLiveData.postValue(getString(R.string.install_fail, lastMsg))
+                // 全部失败也不弹窗：原因记进诊断文件，界面上什么都不弹
+                else -> {
+                    CrashLog.bread("分身安装失败: $lastMsg")
+                    resultLiveData.postValue("")
+                }
             }
         } catch (e: Exception) {
-            resultLiveData.postValue(getString(R.string.install_fail, e.message ?: e.javaClass.simpleName))
+            CrashLog.bread("分身安装异常: ${e.message ?: e.javaClass.simpleName}")
+            resultLiveData.postValue("")
         }
         scanUser()
     }
