@@ -1,11 +1,11 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- 浅色液态主题（2.3.16 全新界面）：亮底 + 深字，状态栏浅底配深色图标 -->
     <style name="Theme.BlackBox" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/brand_blue</item>
-        <item name="colorPrimaryVariant">#0284C7</item>
+        <item name="colorPrimary">@color/brand_coral</item>
+        <item name="colorPrimaryVariant">#E85A46</item>
         <item name="colorOnPrimary">@color/white</item>
         <item name="colorSecondary">@color/accent</item>
-        <item name="colorSecondaryVariant">@color/brand_blue</item>
+        <item name="colorSecondaryVariant">@color/brand_coral</item>
         <item name="colorOnSecondary">@color/white</item>
         <item name="colorSurface">@color/surface</item>
         <item name="android:windowBackground">@color/background</item>

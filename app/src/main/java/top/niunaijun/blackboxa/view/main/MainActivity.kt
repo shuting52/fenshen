@@ -83,8 +83,6 @@ class MainActivity : LoadingActivity() {
     /** 卡通更新弹窗：打开时不为空；下载进度轮询靠它停 */
     private var updateDialog: Dialog? = null
     private var updatePolling: Boolean = false
-    private val updateHandler = Handler(Looper.getMainLooper())
-    private var typewriterRunnable: Runnable? = null
 
     /** 下载完成就直接调安装器，不跳浏览器 */
     private val downloadReceiver = object : BroadcastReceiver() {
@@ -274,7 +272,7 @@ class MainActivity : LoadingActivity() {
         updateDownloadId = dm.enqueue(request)
     }
 
-    /** 卡通动态更新弹窗：猫咪圆环转圈、猫脸上下浮动、标题弹出、更新内容打字机逐字打出。
+    /** 更新弹窗：猫咪圆环转圈、猫脸上下浮动、标题弹出，内容直接显示全文。
      *  点“立即更新”直接开始下载，弹窗里显示下载进度，下载完自动调安装器。 */
     private fun showUpdateDialog(tag: String, body: String, apkUrl: String?, htmlUrl: String) {
         updateDialog?.dismiss()
@@ -286,7 +284,7 @@ class MainActivity : LoadingActivity() {
             val lp = it.attributes
             lp?.windowAnimations = R.style.UpdateDialogAnim
             it.attributes = lp
-            it.setDimAmount(0.5f)
+            it.setDimAmount(0.2f)
             val width = (resources.displayMetrics.widthPixels * 0.9).toInt()
             it.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
         }
@@ -320,25 +318,12 @@ class MainActivity : LoadingActivity() {
             repeatCount = ValueAnimator.INFINITE
             start()
         }
-        // 更新内容打字机逐字打出
-        val fullText = body.ifEmpty { "淑婷分身有新版本。" }
-        messageView.text = ""
-        var index = 0
-        typewriterRunnable = object : Runnable {
-            override fun run() {
-                if (index <= fullText.length && updateDialog != null) {
-                    messageView.text = fullText.substring(0, index)
-                    index++
-                    updateHandler.postDelayed(this, 25)
-                }
-            }
-        }
-        updateHandler.post(typewriterRunnable!!)
+        // 更新内容直接显示全文，不打字机
+        messageView.text = body.ifEmpty { "淑婷分身有新版本。" }
         dialog.setOnDismissListener {
             updatePolling = false
             ringAnim.cancel()
             faceAnim.cancel()
-            typewriterRunnable?.let { updateHandler.removeCallbacks(it) }
             updateDialog = null
         }
 

@@ -30,7 +30,7 @@
                     android:layout_height="24dp"
                     android:layout_gravity="top|start"
                     android:visibility="invisible"
-                    app:bg_color="@color/brand_blue"
+                    app:bg_color="@color/brand_coral"
                     app:position="left_top"
                     app:text="*"
                     app:side_length="22dp" />

@@ -33,7 +33,7 @@ open class BaseActivity : AppCompatActivity() {
     }
 
     /** 全局液态主题：每个页面根布局下第一层铺一块实时模糊，
-     *  透出根布局自己的 boli 壁纸（@drawable/bg_boli），不用每个页面单独改。 */
+     *  透出根布局自己的晨光壁纸（@drawable/bg_dawn），不用每个页面单独改。 */
     private fun injectGlassBackground() {
         if (hasOwnGlassBackground) return
         val content = findViewById<ViewGroup>(android.R.id.content) ?: return

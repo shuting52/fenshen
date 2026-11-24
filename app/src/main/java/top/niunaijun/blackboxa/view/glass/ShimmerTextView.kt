@@ -21,11 +21,11 @@ class ShimmerTextView @JvmOverloads constructor(
 ) : AppCompatTextView(context, attrs, defStyleAttr) {
 
     private val gradientColors = intArrayOf(
-        Color.parseColor("#16A34A"),
-        Color.parseColor("#0284C7"),
-        Color.parseColor("#4F46E5"),
-        Color.parseColor("#BAE6FD"),
-        Color.parseColor("#16A34A")
+        Color.parseColor("#FF6B57"),
+        Color.parseColor("#FFB020"),
+        Color.parseColor("#FF8FA3"),
+        Color.parseColor("#FFE3D6"),
+        Color.parseColor("#FF6B57")
     )
     private val gradientPositions = floatArrayOf(0f, 0.35f, 0.6f, 0.8f, 1f)
     private var gradient: LinearGradient? = null

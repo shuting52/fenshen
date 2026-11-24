@@ -57,7 +57,7 @@ class ListActivity : BaseActivity() {
         initViewModel()
     }
 
-    /** 整屏磨砂玻璃：壁纸 + 强模糊 + boli 玻璃面 */
+    /** 整屏磨砂玻璃：壁纸 + 强模糊 + 晨光玻璃面 */
     private fun setupBlurView() {
         viewBinding.blurView.setupWith(viewBinding.root)
             .setBlurAlgorithm(RenderScriptBlur(this))
