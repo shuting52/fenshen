@@ -127,8 +127,12 @@ class MainActivity : LoadingActivity() {
         previewInstalledAppList()
         setupBlur()
         initToolbar(viewBinding.toolbarLayout.toolbar, R.string.app_name)
-        // 顶栏只留空间名副标题，“淑婷分身”标题字不要了
-        viewBinding.toolbarLayout.toolbar.title = ""
+        // 顶栏只留空间名副标题，“淑婷分身”标题字不要了。
+        // 注意：标题不能设成空字符串——顶栏只在标题非空时才建标题 View，
+        // 标题 View 没了，副标题就从第 2 位挪到第 1 位，initToolbarSubTitle
+        // 里 getChildAt(1) 拿到空就崩了（2.3.12/2.3.13 启动闪退的根因）。
+        // 设成一个空格：看着没字，View 还在，位置不错位。
+        viewBinding.toolbarLayout.toolbar.title = " "
         initViewPager()
         CrashLog.bread("MainActivity initViewPager ok")
         initFab()
@@ -436,8 +440,8 @@ class MainActivity : LoadingActivity() {
 
     private fun initToolbarSubTitle() {
         updateUserRemark(0)
-        //hack code
-        viewBinding.toolbarLayout.toolbar.getChildAt(1).setOnClickListener {
+        //hack code：副标题 View 在顶栏第 2 位；取不到也不许崩启动
+        viewBinding.toolbarLayout.toolbar.getChildAt(1)?.setOnClickListener {
             MaterialDialog(this).show {
                 title(res = R.string.userRemark)
                 input(
