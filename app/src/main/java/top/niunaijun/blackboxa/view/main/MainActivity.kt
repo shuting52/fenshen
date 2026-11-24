@@ -58,6 +58,9 @@ class MainActivity : LoadingActivity() {
     private var updateDownloadId: Long = -1L
     private var updateApkFileName: String? = null
 
+    /** 上次查更新的时间（毫秒），回到 App 时超过 10 分钟就再查一次 */
+    private var lastUpdateCheckTime: Long = 0L
+
     /** 下载完成就直接调安装器，不跳浏览器 */
     private val downloadReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -99,6 +102,15 @@ class MainActivity : LoadingActivity() {
         checkAppUpdate()
     }
 
+    /** 回到 App 也查一次：之前只在冷启动时查，App 一直挂在后台就永远查不到新版 */
+    override fun onResume() {
+        super.onResume()
+        val now = System.currentTimeMillis()
+        if (now - lastUpdateCheckTime > 10 * 60 * 1000L) {
+            checkAppUpdate()
+        }
+    }
+
     override fun onDestroy() {
         try {
             unregisterReceiver(downloadReceiver)
@@ -123,23 +135,34 @@ class MainActivity : LoadingActivity() {
         }.start()
     }
 
-    /** 启动时查一次 fenshen 仓库的最新 Release，有新版就弹更新提醒；没网或查不到就静默跳过。
+    /** 查一次 fenshen 仓库的最新 Release，有新版就弹更新提醒。
      *  点“立即更新”直接在 App 里下载安装包，下载完自动调起安装，不跳浏览器。
-     *  只有 Release 里找不到安装包时才回退到打开 Release 页。 */
-    private fun checkAppUpdate() {
+     *  只有 Release 里找不到安装包时才回退到打开 Release 页。
+     *  自动查时没网或查不到就静默跳过；手动点“检查更新”时把结果说出来。 */
+    private fun checkAppUpdate(manual: Boolean = false) {
+        lastUpdateCheckTime = System.currentTimeMillis()
         Thread {
             try {
                 val conn = URL("https://api.github.com/repos/shuting52/fenshen/releases/latest")
                     .openConnection() as HttpURLConnection
-                conn.connectTimeout = 8000
-                conn.readTimeout = 8000
+                conn.connectTimeout = 20000
+                conn.readTimeout = 20000
                 conn.setRequestProperty("Accept", "application/vnd.github+json")
-                if (conn.responseCode != 200) return@Thread
+                if (conn.responseCode != 200) {
+                    if (manual) runOnUiThread { toast(R.string.update_check_failed) }
+                    return@Thread
+                }
                 val json = JSONObject(conn.inputStream.bufferedReader().readText())
                 val tag = json.optString("tag_name", "").trimStart('v')
                 val body = json.optString("body", "")
-                if (tag.isEmpty()) return@Thread
-                if (!isNewerVersion(tag, BuildConfig.VERSION_NAME)) return@Thread
+                if (tag.isEmpty()) {
+                    if (manual) runOnUiThread { toast(R.string.update_check_failed) }
+                    return@Thread
+                }
+                if (!isNewerVersion(tag, BuildConfig.VERSION_NAME)) {
+                    if (manual) runOnUiThread { toast(R.string.update_latest) }
+                    return@Thread
+                }
                 var apkUrl: String? = null
                 val assets = json.optJSONArray("assets")
                 if (assets != null) {
@@ -172,7 +195,8 @@ class MainActivity : LoadingActivity() {
                     }
                 }
             } catch (e: Exception) {
-                // 没网 / 接口不通：不打扰
+                // 没网 / 接口不通：自动查时不打扰，手动查时说出来
+                if (manual) runOnUiThread { toast(R.string.update_check_failed) }
             }
         }.start()
     }
@@ -370,6 +394,10 @@ class MainActivity : LoadingActivity() {
             R.id.main_refresh_process -> {
                 BXposedManager.get().killAllProcesses()
                 toast(R.string.refresh_process_done)
+            }
+
+            R.id.main_check_update -> {
+                checkAppUpdate(manual = true)
             }
         }
 

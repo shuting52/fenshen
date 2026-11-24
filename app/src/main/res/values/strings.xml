@@ -48,6 +48,9 @@
     <string name="update_downloading">Downloading the update, it will install when done</string>
     <string name="update_need_install_permission">Please allow installing unknown apps first, then update</string>
     <string name="update_download_failed">Download failed, please retry</string>
+    <string name="check_update">Check for updates</string>
+    <string name="update_latest">Already the latest version</string>
+    <string name="update_check_failed">Update check failed, please check your network</string>
     <string name="app_hotfix">Hot-Fix Config</string>
     <string name="hotfix_dialog_title">Hot-Fix Patch</string>
     <string name="hotfix_dialog_hint_none">No patch configured. Pick a .dex/.apk/.jar patch file; its classes will be injected in front of the original dex on next app start.</string>
