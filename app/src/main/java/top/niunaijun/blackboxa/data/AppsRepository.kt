@@ -15,6 +15,7 @@ import top.niunaijun.blackbox.utils.FileUtils
 import top.niunaijun.blackboxa.R
 import top.niunaijun.blackboxa.app.App
 import top.niunaijun.blackboxa.app.AppManager
+import top.niunaijun.blackboxa.app.CloneSpace
 import top.niunaijun.blackboxa.bean.AppInfo
 import top.niunaijun.blackboxa.bean.InstalledAppBean
 import top.niunaijun.blackboxa.util.getString
@@ -78,7 +79,9 @@ class AppsRepository {
                     it.icon,
                     it.packageName,
                     it.sourceDir,
-                    blackBoxCore.isInstalled(it.packageName, userID)
+                    CloneSpace.spaceMembers(userID).any { memberId ->
+                        blackBoxCore.isInstalled(it.packageName, memberId)
+                    }
                 )
             }
             appsLiveData.postValue(newInstalledList)
@@ -118,29 +121,41 @@ class AppsRepository {
     fun getVmInstallList(userId: Int, appsLiveData: MutableLiveData<List<AppInfo>>) {
         val sortListData =
             AppManager.mRemarkSharedPreferences.getString("AppList$userId", "")
-        val sortList = sortListData?.split(",")
+        val sortList = sortListData?.split(",") ?: emptyList()
 
-        val applicationList = BlackBoxCore.get().getInstalledApplications(0, userId)
-
-        val appInfoList = mutableListOf<AppInfo>()
-        applicationList.also {
-            if (sortList.isNullOrEmpty()) {
-                return@also
+        // 一个空间 = 空间本身 + 它的隐藏克隆用户，同一应用出现多次时自动编号
+        val members = CloneSpace.spaceMembers(userId)
+        val perMember = members.map { memberId ->
+            BlackBoxCore.get().getInstalledApplications(0, memberId).map { app ->
+                Triple(app, memberId, app.packageName)
             }
-            it.sortWith(AppsSortComparator(sortList))
-
-        }.forEach {
-            val info = AppInfo(
-                it.loadLabel(getPackageManager()).toString(),
-                it.loadIcon(getPackageManager()),
-                it.packageName,
-                it.sourceDir,
-                isInstalledXpModule(it.packageName)
-            )
-
-            appInfoList.add(info)
         }
-
+        val totals = mutableMapOf<String, Int>()
+        perMember.flatten().forEach { totals[it.third] = (totals[it.third] ?: 0) + 1 }
+        val seen = mutableMapOf<String, Int>()
+        val appInfoList = mutableListOf<AppInfo>()
+        perMember.forEach { list ->
+            list.forEach { (app, memberId, pkg) ->
+                val index = (seen[pkg] ?: 0) + 1
+                seen[pkg] = index
+                val label = app.loadLabel(getPackageManager()).toString()
+                val name = CloneSpace.displayAppName(
+                    userId, memberId, pkg, label, index, totals[pkg] ?: 1
+                )
+                appInfoList.add(
+                    AppInfo(
+                        name,
+                        app.loadIcon(getPackageManager()),
+                        pkg,
+                        app.sourceDir,
+                        isInstalledXpModule(pkg),
+                        memberId
+                    )
+                )
+            }
+        }
+        // 按保存的顺序排；同一包名的分身排在一起（stable sort 保留成员顺序）
+        appInfoList.sortWith(compareBy { sortList.indexOf(it.packageName) })
 
         appsLiveData.postValue(appInfoList)
     }
@@ -159,14 +174,26 @@ class AppsRepository {
     fun installApk(source: String, userId: Int, resultLiveData: MutableLiveData<String>) {
         val blackBoxCore = BlackBoxCore.get()
         try {
+            // 同一个应用已在空间里时，装进一个新创建的隐藏用户，数据完全隔离
+            var targetUserId = userId
+            val packageName = resolvePackageName(source)
+            if (packageName != null &&
+                CloneSpace.spaceMembers(userId).any { blackBoxCore.isInstalled(packageName, it) }
+            ) {
+                targetUserId = CloneSpace.nextCloneUserId()
+            }
+
             val installResult = if (URLUtil.isValidUrl(source)) {
                 val uri = Uri.parse(source)
-                blackBoxCore.installPackageAsUser(uri, userId)
+                blackBoxCore.installPackageAsUser(uri, targetUserId)
             } else {
-                blackBoxCore.installPackageAsUser(source, userId)
+                blackBoxCore.installPackageAsUser(source, targetUserId)
             }
 
             if (installResult.success) {
+                if (targetUserId != userId) {
+                    CloneSpace.addCloneUser(userId, targetUserId)
+                }
                 updateAppSortList(userId, installResult.packageName, true)
                 resultLiveData.postValue(getString(R.string.install_success))
             } else {
@@ -178,10 +205,60 @@ class AppsRepository {
         scanUser()
     }
 
-    fun unInstall(packageName: String, userID: Int, resultLiveData: MutableLiveData<String>) {
+    /** 安装前先读出包名（包名 / 文件路径 / content URI 三种来源都支持） */
+    private fun resolvePackageName(source: String): String? {
+        return try {
+            val pm = getPackageManager()
+            when {
+                URLUtil.isValidUrl(source) -> {
+                    val tmp = File(
+                        App.getContext().cacheDir,
+                        "clone-check-${System.currentTimeMillis()}.apk"
+                    )
+                    try {
+                        App.getContext().contentResolver.openInputStream(Uri.parse(source))
+                            ?.use { input ->
+                                tmp.outputStream().use { output -> input.copyTo(output) }
+                            }
+                        pm.getPackageArchiveInfo(tmp.absolutePath, 0)?.packageName
+                    } finally {
+                        tmp.delete()
+                    }
+                }
+                File(source).isFile -> pm.getPackageArchiveInfo(source, 0)?.packageName
+                else -> try {
+                    pm.getPackageInfo(source, 0)?.packageName
+                } catch (e: Exception) {
+                    null
+                }
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    fun unInstall(
+        packageName: String,
+        userID: Int,
+        realUserId: Int,
+        resultLiveData: MutableLiveData<String>
+    ) {
         try {
-            BlackBoxCore.get().uninstallPackageAsUser(packageName, userID)
-            updateAppSortList(userID, packageName, false)
+            BlackBoxCore.get().uninstallPackageAsUser(packageName, realUserId)
+            // 空间里还有同包名的分身时，保留它在排序列表里的位置
+            val stillThere = CloneSpace.spaceMembers(userID).any {
+                BlackBoxCore.get().isInstalled(packageName, it)
+            }
+            if (!stillThere) {
+                updateAppSortList(userID, packageName, false)
+            }
+            // 隐藏克隆用户里没应用了就整个删掉，不留空壳
+            if (CloneSpace.isCloneUser(realUserId) &&
+                BlackBoxCore.get().getInstalledApplications(0, realUserId).isEmpty()
+            ) {
+                BlackBoxCore.get().deleteUser(realUserId)
+                CloneSpace.removeCloneUser(realUserId)
+            }
             scanUser()
             resultLiveData.postValue(getString(R.string.uninstall_success))
         } catch (e: Exception) {
@@ -250,21 +327,29 @@ class AppsRepository {
      */
     private fun scanUser() {
         val blackBoxCore = BlackBoxCore.get()
-        val userList = blackBoxCore.users
+        val realIds = CloneSpace.realUserIds()
 
-        if (userList.isEmpty()) {
-            return
+        if (realIds.isNotEmpty()) {
+            val id = realIds.last()
+            if (blackBoxCore.getInstalledApplications(0, id).isEmpty()) {
+                blackBoxCore.deleteUser(id)
+                AppManager.mRemarkSharedPreferences.edit {
+                    remove("Remark$id")
+                    remove("AppList$id")
+                    remove("CloneUsers_$id")
+                }
+                scanUser()
+                return
+            }
         }
 
-        val id = userList.last().id
-
-        if (blackBoxCore.getInstalledApplications(0, id).isEmpty()) {
-            blackBoxCore.deleteUser(id)
-            AppManager.mRemarkSharedPreferences.edit {
-                remove("Remark$id")
-                remove("AppList$id")
+        // 空的隐藏克隆用户整个删掉，不留空壳
+        blackBoxCore.users.map { it.id }.filter { CloneSpace.isCloneUser(it) }.forEach { hid ->
+            if (blackBoxCore.getInstalledApplications(0, hid).isEmpty()) {
+                blackBoxCore.deleteUser(hid)
+                CloneSpace.removeCloneUser(hid)
+                AppManager.mRemarkSharedPreferences.edit { remove("AppList$hid") }
             }
-            scanUser()
         }
     }
 

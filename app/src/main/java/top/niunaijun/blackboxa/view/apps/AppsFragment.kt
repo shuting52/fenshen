@@ -16,9 +16,11 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import cbfg.rvadapter.RVAdapter
 import com.afollestad.materialdialogs.MaterialDialog
+import com.afollestad.materialdialogs.input.input
 import top.niunaijun.blackbox.BlackBoxCore
 import top.niunaijun.blackbox.core.env.BEnvironment
 import top.niunaijun.blackboxa.R
+import top.niunaijun.blackboxa.app.CloneSpace
 import top.niunaijun.blackboxa.bean.AppInfo
 import top.niunaijun.blackboxa.databinding.FragmentAppsBinding
 import top.niunaijun.blackboxa.util.InjectionUtil
@@ -52,13 +54,15 @@ class AppsFragment : Fragment() {
 
     private var hotfixPackage: String? = null
 
+    private var hotfixUserId: Int = 0
+
     private val patchPicker =
         registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             val pkg = hotfixPackage
             if (uri != null && pkg != null) {
                 // 结果在 onStart 事务分发期间回调，这里不能同步操作 FragmentManager（showLoading），
                 // 拷贝完成后由 resultLiveData 弹 toast
-                viewModel.saveHotfixPatch(userID, pkg, uri)
+                viewModel.saveHotfixPatch(hotfixUserId, pkg, uri)
             }
         }
 
@@ -94,7 +98,7 @@ class AppsFragment : Fragment() {
 
         mAdapter.setItemClickListener { _, data, _ ->
             showLoading()
-            viewModel.launchApk(data.packageName, userID)
+            viewModel.launchApk(data.packageName, data.userId)
         }
 
 
@@ -205,7 +209,11 @@ class AppsFragment : Fragment() {
                         }
 
                         R.id.app_shortcut -> {
-                            ShortcutUtil.createShortcut(requireContext(), userID, data)
+                            ShortcutUtil.createShortcut(requireContext(), data.userId, data)
+                        }
+
+                        R.id.app_rename -> {
+                            showRenameDialog(data)
                         }
                     }
                     return@setOnMenuItemClickListener true
@@ -267,7 +275,7 @@ class AppsFragment : Fragment() {
             message(text = getString(R.string.uninstall_app_hint, info.name))
             positiveButton(R.string.done) {
                 showLoading()
-                viewModel.unInstall(info.packageName, userID)
+                viewModel.unInstall(info.packageName, userID, info.userId)
             }
             negativeButton(R.string.cancel)
         }
@@ -282,7 +290,7 @@ class AppsFragment : Fragment() {
             title(R.string.app_stop)
             message(text = getString(R.string.app_stop_hint,info.name))
             positiveButton(R.string.done) {
-                BlackBoxCore.get().stopPackage(info.packageName, userID)
+                BlackBoxCore.get().stopPackage(info.packageName, info.userId)
                 toast(getString(R.string.is_stop,info.name))
             }
             negativeButton(R.string.cancel)
@@ -299,8 +307,21 @@ class AppsFragment : Fragment() {
             message(text = getString(R.string.app_clear_hint,info.name))
             positiveButton(R.string.done) {
                 showLoading()
-                viewModel.clearApkData(info.packageName, userID)
+                viewModel.clearApkData(info.packageName, info.userId)
             }
+            negativeButton(R.string.cancel)
+        }
+    }
+
+    /** 分身自定义改名：输入框留空 = 恢复自动名（Muse / Muse1、Muse2……） */
+    private fun showRenameDialog(info: AppInfo) {
+        MaterialDialog(requireContext()).show {
+            title(R.string.app_rename)
+            input(hintRes = R.string.app_rename, prefill = info.name) { _, input ->
+                CloneSpace.setCustomAppName(userID, info.userId, info.packageName, input.toString())
+                viewModel.getInstalledApps(userID)
+            }
+            positiveButton(R.string.done)
             negativeButton(R.string.cancel)
         }
     }
@@ -311,7 +332,8 @@ class AppsFragment : Fragment() {
      */
     private fun showHotfixDialog(info: AppInfo) {
         hotfixPackage = info.packageName
-        val patch = BEnvironment.getHotfixPatchFile(userID, info.packageName)
+        hotfixUserId = info.userId
+        val patch = BEnvironment.getHotfixPatchFile(info.userId, info.packageName)
         val message = if (patch.isFile) {
             val time =
                 SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date(patch.lastModified()))
@@ -324,7 +346,7 @@ class AppsFragment : Fragment() {
             message(text = message)
             positiveButton(R.string.hotfix_pick) { pickHotfixPatch() }
             negativeButton(R.string.hotfix_clear) {
-                viewModel.clearHotfixPatch(userID, info.packageName)
+                viewModel.clearHotfixPatch(info.userId, info.packageName)
             }
         }
     }

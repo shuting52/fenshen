@@ -35,9 +35,9 @@ class AppsViewModel(private val repo: AppsRepository) : BaseViewModel() {
         }
     }
 
-    fun unInstall(packageName: String, userID: Int) {
+    fun unInstall(packageName: String, userID: Int, realUserId: Int) {
         launchOnUI {
-            repo.unInstall(packageName, userID, resultLiveData)
+            repo.unInstall(packageName, userID, realUserId, resultLiveData)
         }
     }
 

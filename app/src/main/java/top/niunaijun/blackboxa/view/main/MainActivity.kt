@@ -17,6 +17,7 @@ import top.niunaijun.blackbox.fake.frameworks.BXposedManager
 import top.niunaijun.blackboxa.R
 import top.niunaijun.blackboxa.app.App
 import top.niunaijun.blackboxa.app.AppManager
+import top.niunaijun.blackboxa.app.CloneSpace
 import top.niunaijun.blackboxa.databinding.ActivityMainBinding
 import top.niunaijun.blackboxa.util.InjectionUtil
 import top.niunaijun.blackboxa.util.Resolution
@@ -89,12 +90,12 @@ class MainActivity : LoadingActivity() {
 
     private fun initViewPager() {
 
-        val userList = BlackBoxCore.get().users
+        val userList = CloneSpace.realUserIds()
         userList.forEach {
-            fragmentList.add(AppsFragment.newInstance(it.id))
+            fragmentList.add(AppsFragment.newInstance(it))
         }
 
-        currentUser = userList.firstOrNull()?.id ?: 0
+        currentUser = userList.firstOrNull() ?: 0
         fragmentList.add(AppsFragment.newInstance(userList.size))
 
         mViewPagerAdapter = ViewPagerAdapter(this)
@@ -135,7 +136,7 @@ class MainActivity : LoadingActivity() {
     }
 
     fun scanUser() {
-        val userList = BlackBoxCore.get().users
+        val userList = CloneSpace.realUserIds()
 
         if (fragmentList.size == userList.size) {
             fragmentList.add(AppsFragment.newInstance(fragmentList.size))
@@ -148,12 +149,7 @@ class MainActivity : LoadingActivity() {
     }
 
     private fun updateUserRemark(userId: Int) {
-        var remark = AppManager.mRemarkSharedPreferences.getString("Remark$userId", "User $userId")
-        if (remark.isNullOrEmpty()) {
-            remark = "User $userId"
-        }
-
-        viewBinding.toolbarLayout.toolbar.subtitle = remark
+        viewBinding.toolbarLayout.toolbar.subtitle = CloneSpace.getRemark(userId)
     }
 
     private val apkPathResult =

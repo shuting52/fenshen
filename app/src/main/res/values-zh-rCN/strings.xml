@@ -37,6 +37,7 @@
     <string name="app_clear_hint">是否清除%s的数据？</string>
     <string name="app_remove">卸载应用</string>
     <string name="app_shortcut">创建快捷方式</string>
+    <string name="app_rename">重命名</string>
     <string name="app_hotfix">热修复配置</string>
     <string name="hotfix_dialog_title">热修复补丁</string>
     <string name="hotfix_dialog_hint_none">尚未配置补丁。选择 .dex/.apk/.jar 补丁文件，下次启动分身时补丁类会前插到原 dex 之前加载。</string>
