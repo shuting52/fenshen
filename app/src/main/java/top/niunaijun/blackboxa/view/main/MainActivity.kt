@@ -517,7 +517,8 @@ class MainActivity : LoadingActivity() {
             fragmentList.removeLast()
         }
 
-        mViewPagerAdapter.notifyDataSetChanged()
+        // 延后通知：FragmentManager 正执行事务时直接 notify 会闪退，推到下一轮主线程再通知
+        viewBinding.viewPager.post { mViewPagerAdapter.notifyDataSetChanged() }
 
     }
 

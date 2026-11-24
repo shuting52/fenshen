@@ -310,6 +310,8 @@ class AppsFragment : Fragment() {
         }
 
         viewModel.resultLiveData.observe(viewLifecycleOwner) {
+            // null = 没结果（onStop 清掉的），直接跳过；"" = 装失败的结果，照常关加载框、刷新
+            if (it == null) return@observe
             // 空消息也算一次结果：先关加载框、刷新列表；有文字才弹提示（安装失败不弹窗）
             hideLoading()
             if (!TextUtils.isEmpty(it)) {
