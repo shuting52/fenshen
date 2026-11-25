@@ -303,6 +303,17 @@ class MainActivity : LoadingActivity() {
         welcomeShowing = true
         SakugaFX.attachToWindow(dialog.window)
         dialog.show()
+
+        // show 之后再强制居中一次：只在 show 之前设，个别机型上不生效，窗就顶到上边去了
+        dialog.window?.let {
+            it.setGravity(Gravity.CENTER)
+            val lp = it.attributes
+            lp?.gravity = Gravity.CENTER
+            lp?.y = 0
+            it.attributes = lp
+            val w = (resources.displayMetrics.widthPixels * 0.9).toInt()
+            it.setLayout(w, ViewGroup.LayoutParams.WRAP_CONTENT)
+        }
     }
 
     /** 更新弹窗：冲击星、标题弹出，内容直接显示全文。
@@ -372,6 +383,17 @@ class MainActivity : LoadingActivity() {
         updateDialog = dialog
         SakugaFX.attachToWindow(dialog.window)
         dialog.show()
+
+        // show 之后再强制居中一次：只在 show 之前设，个别机型上不生效，窗就顶到上边去了
+        dialog.window?.let {
+            it.setGravity(Gravity.CENTER)
+            val lp = it.attributes
+            lp?.gravity = Gravity.CENTER
+            lp?.y = 0
+            it.attributes = lp
+            val w = (resources.displayMetrics.widthPixels * 0.9).toInt()
+            it.setLayout(w, ViewGroup.LayoutParams.WRAP_CONTENT)
+        }
     }
 
     private fun installDownloadedApk(fileName: String) {
