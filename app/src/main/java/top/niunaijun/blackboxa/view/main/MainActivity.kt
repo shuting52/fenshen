@@ -606,6 +606,24 @@ class MainActivity : LoadingActivity() {
         return true
     }
 
+    override fun onMenuOpened(featureId: Int, menu: Menu): Boolean {
+        if (featureId == Window.FEATURE_OPTIONS_PANEL) {
+            // ⋮ 点下去、系统菜单还没弹出来之前截住它：改弹 Sakuga 菜单，系统那个不弹。
+            // 只靠接管按钮点击不保险：顶栏重建按钮会把监听换掉，点 ⋮ 就还是系统菜单、一点效果没有，这层是兜底。
+            val toolbar = viewBinding.toolbarLayout.toolbar
+            val anchor = findOverflowButton(toolbar) ?: toolbar
+            SakugaMenu.show(anchor, menu) { item -> onOptionsItemSelected(item) }
+            return false
+        }
+        return super.onMenuOpened(featureId, menu)
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        // 菜单每次打开前都到这里：顶栏要是重建了 ⋮ 按钮，这里当场把接管重新挂一次
+        attachOverflowMenu()
+        return super.onPrepareOptionsMenu(menu)
+    }
+
     /** 接管右上角 ⋮：点它不再弹系统白菜单，改弹 Sakuga 菜单（逐项弹出 + 点按爆裂）。
      *  找不到按钮就不接管，系统菜单照常弹，不会坏事。 */
     private fun attachOverflowMenu() {
