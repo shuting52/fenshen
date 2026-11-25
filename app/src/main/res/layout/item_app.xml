@@ -40,7 +40,7 @@
                     android:layout_height="24dp"
                     android:layout_gravity="top|start"
                     android:visibility="invisible"
-                    app:bg_color="@color/brand_coral"
+                    app:bg_color="@color/brand"
                     app:position="left_top"
                     app:side_length="22dp"
                     app:text="XP"

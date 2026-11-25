@@ -52,7 +52,7 @@ object GlassWallpaper {
             val sw = dm.widthPixels
             val sh = dm.heightPixels
             if (sw <= 0 || sh <= 0) return null
-            val src = BitmapFactory.decodeResource(appCtx.resources, R.drawable.bg_dawn)
+            val src = BitmapFactory.decodeResource(appCtx.resources, R.drawable.bg_stage)
                 ?: return null
             val out = Bitmap.createBitmap(sw, sh, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(out)

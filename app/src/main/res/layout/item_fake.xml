@@ -24,7 +24,7 @@
             android:layout_height="24dp"
             android:layout_gravity="top|start"
             android:visibility="invisible"
-            app:bg_color="@color/brand_coral"
+            app:bg_color="@color/brand"
             app:position="left_top"
             app:text="*"
             app:side_length="22dp" />
@@ -41,7 +41,7 @@
         <TextView
             android:id="@+id/name"
             android:layout_width="match_parent"
-            android:textSize="16sp"
+            android:textSize="15sp"
             android:textColor="@color/primary_text"
             android:layout_height="wrap_content" />
 

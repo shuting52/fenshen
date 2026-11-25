@@ -357,7 +357,7 @@ class MainActivity : LoadingActivity() {
             .setBlurRadius(8f)
             .setBlurAutoUpdate(true)
             .setHasFixedTransformationMatrix(true)
-        viewBinding.blurView.setOverlayColor(Color.parseColor("#66FFFFFF"))
+        viewBinding.blurView.setOverlayColor(Color.parseColor("#80FFFFFF"))
     }
 
     private fun initToolbarSubTitle() {

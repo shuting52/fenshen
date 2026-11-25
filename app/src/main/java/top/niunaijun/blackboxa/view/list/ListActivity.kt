@@ -64,7 +64,7 @@ class ListActivity : BaseActivity() {
             .setBlurRadius(8f)
             .setBlurAutoUpdate(true)
             .setHasFixedTransformationMatrix(true)
-        viewBinding.blurView.setOverlayColor(Color.parseColor("#66FFFFFF"))
+        viewBinding.blurView.setOverlayColor(Color.parseColor("#80FFFFFF"))
     }
 
     /** 点一下应用：输入要创建的分身个数，一键批量分身（1-30 个） */

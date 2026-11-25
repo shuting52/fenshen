@@ -7,6 +7,7 @@ import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.constraintlayout.widget.ConstraintLayout
+import android.graphics.Color
 import eightbitlab.com.blurview.BlurView
 import eightbitlab.com.blurview.RenderScriptBlur
 import top.niunaijun.blackboxa.R
@@ -33,7 +34,7 @@ open class BaseActivity : AppCompatActivity() {
     }
 
     /** 全局液态主题：每个页面根布局下第一层铺一块实时模糊，
-     *  透出根布局自己的晨光壁纸（@drawable/bg_dawn），不用每个页面单独改。 */
+     *  透出根布局自己的舞台壁纸（@drawable/bg_stage），不用每个页面单独改。 */
     private fun injectGlassBackground() {
         if (hasOwnGlassBackground) return
         val content = findViewById<ViewGroup>(android.R.id.content) ?: return
@@ -71,7 +72,7 @@ open class BaseActivity : AppCompatActivity() {
             .setBlurRadius(8f)
             .setBlurAutoUpdate(true)
             .setHasFixedTransformationMatrix(true)
-            .setOverlayColor(0x66FFFFFF)
+            .setOverlayColor(Color.parseColor("#80FFFFFF"))
     }
 
     protected fun initToolbar(toolbar: Toolbar,title:Int, showBack: Boolean = false, onBack: (() -> Unit)? = null) {

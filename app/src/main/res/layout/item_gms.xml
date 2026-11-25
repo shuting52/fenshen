@@ -24,7 +24,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:textColor="@color/primary_text"
-            android:textSize="18sp"
+            android:textSize="17sp"
             tools:text="User1" />
 
     <Switch
