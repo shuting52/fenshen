@@ -30,6 +30,7 @@ import androidx.core.content.edit
 import androidx.viewpager2.widget.ViewPager2
 import com.afollestad.materialdialogs.MaterialDialog
 import org.json.JSONObject
+import top.niunaijun.blackboxa.view.gms.GmsManagerActivity
 import java.net.HttpURLConnection
 import java.net.URL
 import com.afollestad.materialdialogs.input.input
@@ -637,6 +638,10 @@ class MainActivity : LoadingActivity() {
 
             R.id.main_setting -> {
                 SettingActivity.start(this)
+            }
+
+            R.id.main_gms -> {
+                GmsManagerActivity.start(this)
             }
 
             R.id.fake_location -> {

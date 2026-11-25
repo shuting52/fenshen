@@ -3,6 +3,7 @@ package top.niunaijun.blackboxa.view.gms
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Switch
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -14,6 +15,8 @@ import top.niunaijun.blackboxa.databinding.ActivityGmsBinding
 import top.niunaijun.blackboxa.util.InjectionUtil
 import top.niunaijun.blackboxa.util.inflate
 import top.niunaijun.blackboxa.util.toast
+import top.niunaijun.blackbox.BlackBoxCore
+import top.niunaijun.blackbox.core.GmsCore
 import top.niunaijun.blackboxa.view.base.LoadingActivity
 
 /**
@@ -37,6 +40,11 @@ class GmsManagerActivity : LoadingActivity() {
         initViewModel()
 
         initRecyclerView()
+
+        // 手机上没有谷歌环境：提示这里装的是 microG 开源版
+        if (!BlackBoxCore.get().isSupportGms) {
+            viewBinding.gmsHint.visibility = View.VISIBLE
+        }
     }
 
     private fun initViewModel() {
@@ -68,7 +76,19 @@ class GmsManagerActivity : LoadingActivity() {
             hideLoading()
 
             if (result.success) {
-                toast(result.msg)
+                if (result.isMicroG) {
+                    // microG 装好了：问她要不要现在打开 microG 设置、登上谷歌账号
+                    MaterialDialog(this).show {
+                        title(R.string.gms_manager)
+                        message(R.string.gms_open_microg)
+                        positiveButton(R.string.gms_open_settings) {
+                            BlackBoxCore.get().launchApk(GmsCore.GMS_PKG, result.userID)
+                        }
+                        negativeButton(R.string.cancel)
+                    }
+                } else {
+                    toast(result.msg)
+                }
             } else {
                 MaterialDialog(this).show {
                     title(R.string.gms_manager)

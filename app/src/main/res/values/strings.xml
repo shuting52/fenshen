@@ -107,11 +107,14 @@
     <string name="other">Others</string>
     <string name="daemon_enable">Daemon</string>
     <string name="daemon_enable_summary">Keeps a daemon process alive so clones stay running in the background and switch back faster. Uses a little more memory and battery. Restart the app after changing it.</string>
-    <string name="gms_manager">GMS Manager</string>
-    <string name="jump_gms">Open to install Google Mobile Services (GMS) into clones. Some apps won\'t open or sign in without it. If this phone has no Google environment, this row is greyed out.</string>
-    <string name="enable_gms">Enable Service</string>
-    <string name="enable_gms_hint">Opening Google services can make youtube and other software that strongly rely on Google play services run normally.</string>
-    <string name="disable_gms">Disable Service</string>
-    <string name="disable_gms_hint">Clear the current Google service environment? Google service data will be cleared.</string>
-    <string name="no_gms">Currently, there is no Google service environment on mobile phones.</string>
+    <string name="gms_manager">谷歌服务</string>
+    <string name="jump_gms">给分身装谷歌服务，有的软件没它打不开、登不上谷歌账号。</string>
+    <string name="enable_gms">安装谷歌服务</string>
+    <string name="enable_gms_hint">给这个空间装上谷歌服务。装好后，在分身里打开 microG 设置、登上谷歌账号，要谷歌登录的应用就能用了。（手机上有谷歌环境装原生的，没有就装 microG 开源版）</string>
+    <string name="disable_gms">移除谷歌服务</string>
+    <string name="disable_gms_hint">要清除这个空间的谷歌服务环境吗？谷歌服务数据会被清除。</string>
+    <string name="no_gms">手机上没有谷歌环境，点进去装 microG 开源版谷歌服务，装好后在分身里登谷歌账号。</string>
+    <string name="gms_microg_hint">手机上没有谷歌环境，这里装的是 microG 开源版谷歌服务。装好后，在分身里打开 microG 设置、登上谷歌账号，要谷歌登录的应用就能用了。</string>
+    <string name="gms_open_microg">装好了，现在打开 microG 设置、登上谷歌账号？</string>
+    <string name="gms_open_settings">打开 microG 设置</string>
 </resources>

@@ -88,15 +88,13 @@ class SettingFragment : PreferenceFragmentCompat() {
     private fun initGms() {
         val gmsManagerPreference: Preference = (findPreference("gms_manager")!!)
 
-        if (BlackBoxCore.get().isSupportGms) {
-
-            gmsManagerPreference.setOnPreferenceClickListener {
-                GmsManagerActivity.start(requireContext())
-                true
-            }
-        } else {
+        // 手机上没有谷歌环境：这一行照常能点，点进去装 microG 开源版谷歌服务
+        if (!BlackBoxCore.get().isSupportGms) {
             gmsManagerPreference.summary = getString(R.string.no_gms)
-            gmsManagerPreference.isEnabled = false
+        }
+        gmsManagerPreference.setOnPreferenceClickListener {
+            GmsManagerActivity.start(requireContext())
+            true
         }
     }
 
