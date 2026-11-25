@@ -40,13 +40,17 @@
             android:name=".view.main.ShortcutActivity"
             android:excludeFromRecents="true"
             android:exported="true" />
-        <activity android:name=".view.main.MainActivity">
+        <activity
+            android:name=".view.main.SplashActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".view.main.MainActivity" />
     </application>
 
 </manifest>

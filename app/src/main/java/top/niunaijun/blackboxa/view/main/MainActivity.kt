@@ -3,11 +3,13 @@ package top.niunaijun.blackboxa.view.main
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
+import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -69,6 +71,9 @@ class MainActivity : LoadingActivity() {
     private var updateDialog: Dialog? = null
     private var updatePolling: Boolean = false
 
+    /** 欢迎弹窗正开着：先不弹更新提醒，等下次再查 */
+    private var welcomeShowing = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         CrashLog.bread("MainActivity onCreate")
@@ -90,6 +95,7 @@ class MainActivity : LoadingActivity() {
         initToolbarSubTitle()
         cleanOldUpdateApks()
         checkAppUpdate()
+        showWelcomeIfNeeded()
         CrashLog.bread("MainActivity onCreate ok")
     }
 
@@ -260,9 +266,51 @@ class MainActivity : LoadingActivity() {
         }.start()
     }
 
+    /** 新版第一次打开：弹一次欢迎弹窗，介绍核心功能；之后不再弹。
+     *  欢迎开着时不弹更新提醒（更新下次查的时候再弹，不叠两个窗）。 */
+    private fun showWelcomeIfNeeded() {
+        val prefs = getSharedPreferences("fenshen", Context.MODE_PRIVATE)
+        val key = "welcome_shown_${BuildConfig.VERSION_CODE}"
+        if (prefs.getBoolean(key, false)) return
+        showWelcomeDialog(prefs, key)
+    }
+
+    private fun showWelcomeDialog(prefs: SharedPreferences, key: String) {
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.dialog_welcome)
+        dialog.window?.let {
+            it.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            val lp = it.attributes
+            lp?.windowAnimations = R.style.UpdateDialogAnim
+            it.attributes = lp
+            it.setDimAmount(0.2f)
+            it.setGravity(Gravity.CENTER)
+            val width = (resources.displayMetrics.widthPixels * 0.9).toInt()
+            it.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
+        }
+        dialog.setCancelable(true)
+        dialog.setOnDismissListener {
+            welcomeShowing = false
+            prefs.edit { putBoolean(key, true) }
+        }
+        dialog.findViewById<TextView>(R.id.welcome_start).setOnClickListener {
+            // 确认一击：爆裂 + 咚！
+            SakugaFX.burstAtCenter(it)
+            SakugaFX.sfxAt(it, SakugaFX.SFX_DON, it.width / 2f, -8f)
+            dialog.dismiss()
+        }
+        welcomeShowing = true
+        SakugaFX.attachToWindow(dialog.window)
+        dialog.show()
+    }
+
     /** 更新弹窗：冲击星、标题弹出，内容直接显示全文。
-     *  点“立即更新”直接开始下载，弹窗里显示下载进度，下载完自动调安装器。 */
+     *  点“立即更新”直接开始下载，弹窗里显示下载进度，下载完自动调安装器。
+     *  窗口强制居中（Gravity.CENTER），不靠默认位置。 */
     private fun showUpdateDialog(tag: String, body: String, apkUrl: String?, htmlUrl: String) {
+        // 欢迎弹窗正开着：这次不弹更新提醒，下次查的时候再弹
+        if (welcomeShowing) return
         updateDialog?.dismiss()
         val dialog = Dialog(this)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -273,6 +321,7 @@ class MainActivity : LoadingActivity() {
             lp?.windowAnimations = R.style.UpdateDialogAnim
             it.attributes = lp
             it.setDimAmount(0.2f)
+            it.setGravity(Gravity.CENTER)
             val width = (resources.displayMetrics.widthPixels * 0.9).toInt()
             it.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
         }

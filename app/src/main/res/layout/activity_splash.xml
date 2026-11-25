@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 启动页：Sakuga 白纸 + 冲击星 + 大号倒计时数字，3 秒进主页 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="32dp">
+
+    <ImageView
+        android:layout_width="88dp"
+        android:layout_height="88dp"
+        android:layout_marginBottom="16dp"
+        android:src="@drawable/ic_sakuga_burst" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="淑婷分身"
+        android:textColor="@color/primary_text"
+        android:textSize="30sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="40dp"
+        android:text="一个应用，多个身份"
+        android:textColor="@color/secondary_text"
+        android:textSize="15sp" />
+
+    <TextView
+        android:id="@+id/splash_countdown"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="3"
+        android:textColor="@color/accent"
+        android:textSize="72sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="秒后进入主页"
+        android:textColor="@color/secondary_text"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/splash_skip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="48dp"
+        android:background="@drawable/bg_sakuga_card"
+        android:paddingStart="24dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="10dp"
+        android:text="跳过"
+        android:textColor="@color/primary_text"
+        android:textSize="15sp"
+        android:textStyle="bold" />
+</LinearLayout>
