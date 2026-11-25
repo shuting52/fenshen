@@ -4,11 +4,8 @@ import android.os.IInterface;
 
 import java.lang.reflect.Method;
 
-import black.android.content.BRAttributionSource;
 import top.niunaijun.blackbox.BlackBoxCore;
-import top.niunaijun.blackbox.app.BActivityThread;
 import top.niunaijun.blackbox.fake.hook.ClassInvocationStub;
-import top.niunaijun.blackbox.utils.compat.BuildCompat;
 import top.niunaijun.blackbox.utils.compat.ContextCompat;
 
 /**
@@ -55,11 +52,13 @@ public class ContentProviderStub extends ClassInvocationStub implements BContent
             Object arg = args[0];
             if (arg instanceof String) {
                 args[0] = mAppPkg;
-            } else if (arg.getClass().getName().equals(BRAttributionSource.getRealClass().getName())) {
-                // Android 14+ 严格校验 AttributionSource.uid 必须等于真实 binder calling uid，
-                // 虚拟 uid 会触发 SecurityException（Calling uid doesn't match source uid）
-                ContextCompat.fixAttributionSourceState(arg,
-                        BuildCompat.isUpsideDownCake() ? BlackBoxCore.getHostUid() : BActivityThread.getBUid());
+            } else if (arg != null && "android.content.AttributionSource".equals(arg.getClass().getName())) {
+                // 跨进程 Provider 调用时，系统校验 AttributionSource.uid 必须等于真实 binder calling uid。
+                // 分身进程的真实 uid 永远是宿主 uid，虚拟 uid（10000+userId）一定会被拒，
+                // 抛 SecurityException: Calling uid doesn't match source uid，分身进程在
+                // Application.onCreate 里直接死掉，点开分身就弹回空间。所以这里一律写宿主 uid，
+                // 不分系统版本；类名直接比字符串，不走 BR（BR 的类名比对在这条路上没生效）。
+                ContextCompat.fixAttributionSourceState(arg, BlackBoxCore.getHostUid());
             }
         }
         try {

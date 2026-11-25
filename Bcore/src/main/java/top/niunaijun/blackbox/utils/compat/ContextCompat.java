@@ -24,15 +24,59 @@ public class ContextCompat {
     public static final String TAG = "ContextCompat";
 
     public static void fixAttributionSourceState(Object obj, int uid) {
-        Object mAttributionSourceState;
-        if (obj != null && BRAttributionSource.get(obj)._check_mAttributionSourceState() != null) {
-            mAttributionSourceState = BRAttributionSource.get(obj).mAttributionSourceState();
-
-            AttributionSourceStateContext attributionSourceStateContext = BRAttributionSourceState.get(mAttributionSourceState);
-            attributionSourceStateContext._set_packageName(BlackBoxCore.getHostPkg());
-            attributionSourceStateContext._set_uid(uid);
-            fixAttributionSourceState(BRAttributionSource.get(obj).getNext(), uid);
+        if (obj == null) {
+            return;
         }
+        try {
+            Object state = null;
+            try {
+                if (BRAttributionSource.get(obj)._check_mAttributionSourceState() != null) {
+                    state = BRAttributionSource.get(obj).mAttributionSourceState();
+                }
+            } catch (Throwable ignored) {
+            }
+            if (state != null) {
+                // Android 14+：字段收在 AttributionSourceState 里
+                AttributionSourceStateContext attributionSourceStateContext = BRAttributionSourceState.get(state);
+                attributionSourceStateContext._set_packageName(BlackBoxCore.getHostPkg());
+                attributionSourceStateContext._set_uid(uid);
+            } else {
+                // Android 14 以下：AttributionSource 是扁平字段，没有 mAttributionSourceState，
+                // 直接在对象上改 uid / packageName（各版本字段名有 mUid/uid 两种，挨个试，改不到也不抛错）。
+                setFlatField(obj, "mUid", uid);
+                setFlatField(obj, "uid", uid);
+                setFlatField(obj, "mPackageName", BlackBoxCore.getHostPkg());
+                setFlatField(obj, "packageName", BlackBoxCore.getHostPkg());
+            }
+        } catch (Throwable ignored) {
+        }
+        try {
+            fixAttributionSourceState(BRAttributionSource.get(obj).getNext(), uid);
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static void setFlatField(Object obj, String fieldName, Object value) {
+        try {
+            java.lang.reflect.Field field = findField(obj.getClass(), fieldName);
+            if (field != null) {
+                field.setAccessible(true);
+                field.set(obj, value);
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static java.lang.reflect.Field findField(Class<?> clazz, String fieldName) {
+        Class<?> c = clazz;
+        while (c != null) {
+            try {
+                return c.getDeclaredField(fieldName);
+            } catch (NoSuchFieldException e) {
+                c = c.getSuperclass();
+            }
+        }
+        return null;
     }
 
     public static void fix(Context context) {
