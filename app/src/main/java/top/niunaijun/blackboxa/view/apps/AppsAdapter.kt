@@ -38,7 +38,7 @@ class AppsAdapter : RVHolderFactory() {
         val binding = ItemAppBinding.bind(itemView)
 
         init {
-            // 点按：压扁，松开爆裂 + ドン!
+            // 点按：压扁，松开爆裂 + 咚！
             SakugaFX.attachPress(itemView) { fx, x, y ->
                 SakugaFX.burst(fx, x, y)
                 SakugaFX.sfx(
@@ -66,7 +66,7 @@ class AppsAdapter : RVHolderFactory() {
             binding.check.setOnCheckedChangeListener { _, checked ->
                 if (checked) selected.add(selectionKey(item))
                 else selected.remove(selectionKey(item))
-                // 直接点勾选框：水晶碎片 + ズザッ
+                // 直接点勾选框：水晶碎片 + 唰
                 if (checked) {
                     SakugaFX.shardsAt(binding.check, 14f, 14f)
                     SakugaFX.sfxAt(

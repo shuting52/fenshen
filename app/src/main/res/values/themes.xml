@@ -41,8 +41,8 @@
     </style>
 
     <style name="ToolBarColorStyle" parent="ThemeOverlay.AppCompat.ActionBar">
-        <item name="actionMenuTextColor">@color/primary_text</item>
-        <item name="colorControlNormal">@color/primary_text</item>
+        <item name="actionMenuTextColor">@color/paper</item>
+        <item name="colorControlNormal">@color/paper</item>
         <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
     </style>
 

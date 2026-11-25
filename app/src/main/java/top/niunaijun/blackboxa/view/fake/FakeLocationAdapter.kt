@@ -27,7 +27,7 @@ class FakeLocationAdapter : RVHolderFactory() {
     class FakeLocationVH(itemView:View):RVHolder<FakeLocationBean>(itemView){
 
         init {
-            // 点按：压扁，松开爆裂 + ドン!
+            // 点按：压扁，松开爆裂 + 咚！
             SakugaFX.attachPress(itemView) { fx, x, y ->
                 SakugaFX.burst(fx, x, y)
                 SakugaFX.sfx(

@@ -9,8 +9,8 @@
 //   - 效果离场靠缩小/变细，透明度永远不变
 //   - 挤压保体积：压扁时变宽，拉长时变窄；弹簧（k=300, d=20）而不是缓动
 //   - 粉红只给点缀（楔形、针、勾）；平时控件是素的，什么都不画
-//   - 一次反应最多一个拟声字，落在命中那一帧：ドン!（确认）、カチッ（开关）、
-//     ズザッ（勾选/提示）、ポン（切页）、ゴゴゴゴ（加载/进度）
+//   - 一次反应最多一个拟声字，落在命中那一帧：咚！（确认）、咔哒（开关）、
+//     唰（勾选/提示）、砰（切页）、轰隆隆（加载/进度）
 package top.niunaijun.blackboxa.view.sakuga
 
 import android.app.Activity
@@ -50,11 +50,11 @@ object SakugaFX {
     val DIM = Color.parseColor("#8580B0")
 
     // ── 拟声字（core.js 的六个词，这里只用得到的五个） ──
-    const val SFX_DON = "ドン!"
-    const val SFX_KACHI = "カチッ"
-    const val SFX_ZUZA = "ズザッ"
-    const val SFX_PON = "ポン"
-    const val SFX_GOGO = "ゴゴゴゴ"
+    const val SFX_DON = "咚！"
+    const val SFX_KACHI = "咔哒"
+    const val SFX_ZUZA = "唰"
+    const val SFX_PON = "砰"
+    const val SFX_GOGO = "轰隆隆"
 
     private const val TAU = (PI * 2).toFloat()
 
@@ -606,7 +606,7 @@ object SakugaFX {
         }
     }
 
-    /** 拟声字：描边大字，弹一下出现、缩小离场。dotted 时用虚线描边（ズザッ那款）。 */
+    /** 拟声字：描边大字，弹一下出现、缩小离场。dotted 时用虚线描边（唰那款）。 */
     fun sfx(
         fx: FXView?,
         word: String,

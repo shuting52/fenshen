@@ -206,7 +206,7 @@ class AppsFragment : Fragment() {
         viewBinding.batchBar.visibility = View.VISIBLE
         (requireActivity() as MainActivity).showFloatButton(false)
         updateBatchBar()
-        // 进多选：一道斩击 + ズザッ
+        // 进多选：一道斩击 + 唰
         if (anchor != null) {
             SakugaFX.slashAtCenter(anchor)
             SakugaFX.sfxAt(
@@ -235,7 +235,7 @@ class AppsFragment : Fragment() {
         }
         mAdapter.notifyItemChanged(position)
         updateBatchBar()
-        // 勾上：水晶碎片飞起来 + ズザッ
+        // 勾上：水晶碎片飞起来 + 唰
         if (nowSelected) {
             val holder = viewBinding.recyclerView.findViewHolderForAdapterPosition(position)
             val itemView = holder?.itemView

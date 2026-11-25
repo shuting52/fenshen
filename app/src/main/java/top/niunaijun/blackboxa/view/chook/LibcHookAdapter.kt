@@ -19,7 +19,7 @@ class LibcHookAdapter : RVHolderFactory() {
     class LibcHookVH(itemView: View) : RVHolder<LibcHookAppInfo>(itemView) {
 
         init {
-            // 点按：压扁，松开爆裂 + ドン!
+            // 点按：压扁，松开爆裂 + 咚！
             SakugaFX.attachPress(itemView) { fx, x, y ->
                 SakugaFX.burst(fx, x, y)
                 SakugaFX.sfx(
@@ -38,7 +38,7 @@ class LibcHookAdapter : RVHolderFactory() {
             binding.enable.isChecked = item.disabled
             binding.enable.setOnCheckedChangeListener { buttonView, _ ->
                 if (buttonView.isPressed) {
-                    // 勾上：水晶碎片 + ズザッ
+                    // 勾上：水晶碎片 + 唰
                     SakugaFX.shardsAt(buttonView, buttonView.width / 2f, buttonView.height / 2f)
                     SakugaFX.sfxAt(
                         buttonView, SakugaFX.SFX_ZUZA,

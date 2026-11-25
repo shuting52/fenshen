@@ -1,5 +1,5 @@
 // Sakuga 提示：白纸卡片从侧面拉成一条烟一样 streak 进来，落下时扬起一小团尘、
-// 落一个ズザッ，停 2.6 秒，离场时缩小消失（不淡出）。
+// 落一个唰，停 2.6 秒，离场时缩小消失（不淡出）。
 // 全 App 的 toast 都走这里（ToastEx.kt），调用处不用改。
 package top.niunaijun.blackboxa.view.sakuga
 
@@ -99,7 +99,7 @@ object SakugaToast {
                 .setDuration(260)
                 .setInterpolator(OvershootInterpolator())
                 .withEndAction {
-                    // 落地：扬尘 + ズザッ
+                    // 落地：扬尘 + 唰
                     val loc = IntArray(2)
                     container.getLocationOnScreen(loc)
                     val fxv = SakugaFX.fxViewFor(container)

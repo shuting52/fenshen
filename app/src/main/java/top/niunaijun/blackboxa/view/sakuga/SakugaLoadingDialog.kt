@@ -1,4 +1,4 @@
-// Sakuga 加载弹窗：暴风雨云上下浮动 + ゴゴゴゴ + 状态文字。
+// Sakuga 加载弹窗：暴风雨云上下浮动 + 轰隆隆 + 状态文字。
 // 替代原来的猫咪加载（CatLoadingView），返回键照样拦住。
 package top.niunaijun.blackboxa.view.sakuga
 

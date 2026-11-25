@@ -302,7 +302,7 @@ class MainActivity : LoadingActivity() {
 
         cancelBtn.setOnClickListener { dialog.dismiss() }
         nowBtn.setOnClickListener {
-            // 确认一击：爆裂 + ドン!
+            // 确认一击：爆裂 + 咚！
             SakugaFX.burstAtCenter(nowBtn)
             SakugaFX.sfxAt(nowBtn, SakugaFX.SFX_DON, nowBtn.width / 2f, -8f)
             if (apkUrl.isNullOrEmpty()) {
@@ -412,7 +412,7 @@ class MainActivity : LoadingActivity() {
     }
 
     private fun initFab() {
-        // 加号：一按压扁，松开爆裂 + ドン!
+        // 加号：一按压扁，松开爆裂 + 咚！
         SakugaFX.attachPress(viewBinding.fab) { fx, x, y ->
             SakugaFX.burst(fx, x, y)
             SakugaFX.sfx(

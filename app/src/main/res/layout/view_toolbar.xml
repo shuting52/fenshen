@@ -7,7 +7,7 @@
         android:layout_height="wrap_content"
         android:theme="@style/ToolBarColorStyle"
         android:background="@drawable/bg_sakuga_topbar"
-        app:subtitleTextColor="@color/primary_text"
-        app:titleTextColor="@color/primary_text">
+        app:subtitleTextColor="@color/paper"
+        app:titleTextColor="@color/paper">
 
 </com.google.android.material.appbar.MaterialToolbar>

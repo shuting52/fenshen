@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Sakuga 加载弹窗：暴风雨云 + ゴゴゴゴ + 状态文字 -->
+<!-- Sakuga 加载弹窗：暴风雨云 + 轰隆隆 + 状态文字 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
@@ -17,7 +17,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:text="ゴゴゴゴ"
+        android:text="轰隆隆"
         android:textColor="@color/accent"
         android:textSize="14sp"
         android:textStyle="bold" />
