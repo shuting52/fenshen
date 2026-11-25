@@ -7,6 +7,7 @@ import cbfg.rvadapter.RVHolderFactory
 import top.niunaijun.blackboxa.R
 import top.niunaijun.blackboxa.bean.GmsBean
 import top.niunaijun.blackboxa.databinding.ItemGmsBinding
+import top.niunaijun.blackboxa.view.sakuga.SakugaFX
 
 /**
  *
@@ -23,12 +24,29 @@ class GmsAdapter : RVHolderFactory() {
 
     class GmsVH(itemView:View):RVHolder<GmsBean>(itemView){
 
+        init {
+            // 点按：压扁，松开爆裂 + ドン!
+            SakugaFX.attachPress(itemView) { fx, x, y ->
+                SakugaFX.burst(fx, x, y)
+                SakugaFX.sfx(
+                    fx, SakugaFX.SFX_DON, x,
+                    y - 48f * itemView.resources.displayMetrics.density
+                )
+            }
+        }
+
         private val binding = ItemGmsBinding.bind(itemView)
         override fun setContent(item: GmsBean, isSelected: Boolean, payload: Any?) {
             binding.tvTitle.text = item.userName
             binding.checkbox.isChecked = item.isInstalledGms
             binding.checkbox.setOnCheckedChangeListener  { buttonView, _ ->
                 if(buttonView.isPressed){
+                    // 勾上：水晶碎片 + ズザッ
+                    SakugaFX.shardsAt(buttonView, buttonView.width / 2f, buttonView.height / 2f)
+                    SakugaFX.sfxAt(
+                        buttonView, SakugaFX.SFX_ZUZA,
+                        buttonView.width / 2f, -10f, sizeSp = 18f, dotted = true
+                    )
                     binding.root.performClick()
                 }
             }

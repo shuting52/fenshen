@@ -7,6 +7,7 @@ import cbfg.rvadapter.RVHolderFactory
 import top.niunaijun.blackboxa.R
 import top.niunaijun.blackboxa.bean.InstalledAppBean
 import top.niunaijun.blackboxa.databinding.ItemPackageBinding
+import top.niunaijun.blackboxa.view.sakuga.SakugaFX
 
 /**
  *
@@ -24,6 +25,17 @@ class ListAdapter : RVHolderFactory() {
     class ListVH(itemView:View) :RVHolder<InstalledAppBean>(itemView){
 
         val binding = ItemPackageBinding.bind(itemView)
+
+        init {
+            // 点按：压扁，松开爆裂 + ドン!
+            SakugaFX.attachPress(itemView) { fx, x, y ->
+                SakugaFX.burst(fx, x, y)
+                SakugaFX.sfx(
+                    fx, SakugaFX.SFX_DON, x,
+                    y - 48f * itemView.resources.displayMetrics.density
+                )
+            }
+        }
         override fun setContent(item: InstalledAppBean, isSelected: Boolean, payload: Any?) {
             binding.icon.setImageDrawable(item.icon)
             binding.name.text = item.name

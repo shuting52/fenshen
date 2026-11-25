@@ -1,7 +1,5 @@
 package top.niunaijun.blackboxa.view.main
 
-import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
@@ -15,9 +13,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
-import android.view.animation.LinearInterpolator
 import android.view.animation.OvershootInterpolator
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -50,16 +46,13 @@ import top.niunaijun.blackboxa.util.toast
 import top.niunaijun.blackboxa.view.apps.AppsFragment
 import top.niunaijun.blackboxa.view.base.LoadingActivity
 import top.niunaijun.blackboxa.view.list.ListViewModel
-import eightbitlab.com.blurview.RenderScriptBlur
 import top.niunaijun.blackboxa.view.fake.FakeManagerActivity
-import top.niunaijun.blackboxa.view.glass.GlassWallpaper
 import top.niunaijun.blackboxa.view.list.ListActivity
+import top.niunaijun.blackboxa.view.sakuga.SakugaFX
 import top.niunaijun.blackboxa.view.setting.SettingActivity
 
 
 class MainActivity : LoadingActivity() {
-
-    override val hasOwnGlassBackground: Boolean = true
 
     private val viewBinding: ActivityMainBinding by inflate()
 
@@ -82,7 +75,6 @@ class MainActivity : LoadingActivity() {
         setContentView(viewBinding.root)
         CrashLog.bread("MainActivity setContentView ok")
         previewInstalledAppList()
-        setupBlur()
         initToolbar(viewBinding.toolbarLayout.toolbar, R.string.app_name)
         // 顶栏只留空间名副标题，“淑婷分身”标题字不要了。
         // 注意：标题不能设成空字符串——顶栏只在标题非空时才建标题 View，
@@ -96,8 +88,6 @@ class MainActivity : LoadingActivity() {
         CrashLog.bread("MainActivity initViewPager ok")
         initFab()
         initToolbarSubTitle()
-        // 液态玻璃：后台先把模糊壁纸准备好，卡片画出来就是透镜
-        Thread { GlassWallpaper.prepare(this) }.start()
         cleanOldUpdateApks()
         checkAppUpdate()
         CrashLog.bread("MainActivity onCreate ok")
@@ -185,9 +175,11 @@ class MainActivity : LoadingActivity() {
     private fun startUpdateDownload(
         tag: String, apkUrl: String,
         progressBar: ProgressBar, progressText: TextView,
-        progressBox: LinearLayout, buttonBox: LinearLayout
+        progressBox: LinearLayout, buttonBox: LinearLayout, cloud: View
     ) {
         val fileName = "Shuting-Fenshen-$tag.apk"
+        // 完成一击只炸一次
+        var completionBurstFired = false
         val outFile = File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), fileName)
         updatePolling = true
         Thread {
@@ -214,6 +206,21 @@ class MainActivity : LoadingActivity() {
                                     progressBar.progress = percent
                                     progressText.text =
                                         getString(R.string.update_downloading_percent, percent)
+                                    // 云骑在进度条前沿
+                                    if (cloud.width > 0 && progressBar.width > 0) {
+                                        val maxX = (progressBar.width - cloud.width).toFloat()
+                                            .coerceAtLeast(0f)
+                                        cloud.translationX = (progressBar.width * percent / 100f - cloud.width / 2f)
+                                            .coerceIn(0f, maxX)
+                                    }
+                                    if (percent >= 100 && !completionBurstFired) {
+                                        completionBurstFired = true
+                                        SakugaFX.burstAtCenter(cloud)
+                                        SakugaFX.sfxAt(
+                                            cloud, SakugaFX.SFX_DON,
+                                            cloud.width / 2f, -8f
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -228,8 +235,16 @@ class MainActivity : LoadingActivity() {
                 runOnUiThread {
                     updatePolling = false
                     if (isFinishing || isDestroyed) return@runOnUiThread
-                    updateDialog?.dismiss()
-                    installDownloadedApk(fileName)
+                    val dlg = updateDialog
+                    if (dlg?.isShowing == true) {
+                        // 让完成一击的命中帧读完再调安装器
+                        dlg.window?.decorView?.postDelayed({
+                            dlg.dismiss()
+                            installDownloadedApk(fileName)
+                        }, 260)
+                    } else {
+                        installDownloadedApk(fileName)
+                    }
                 }
             } catch (e: Exception) {
                 CrashLog.bread("update download failed: ${e.message}")
@@ -245,7 +260,7 @@ class MainActivity : LoadingActivity() {
         }.start()
     }
 
-    /** 更新弹窗：猫咪圆环转圈、猫脸上下浮动、标题弹出，内容直接显示全文。
+    /** 更新弹窗：冲击星、标题弹出，内容直接显示全文。
      *  点“立即更新”直接开始下载，弹窗里显示下载进度，下载完自动调安装器。 */
     private fun showUpdateDialog(tag: String, body: String, apkUrl: String?, htmlUrl: String) {
         updateDialog?.dismiss()
@@ -262,12 +277,11 @@ class MainActivity : LoadingActivity() {
             it.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
         }
         dialog.setCancelable(true)
-        val ring = dialog.findViewById<ImageView>(R.id.update_cat_ring)
-        val face = dialog.findViewById<ImageView>(R.id.update_cat_face)
         val titleView = dialog.findViewById<TextView>(R.id.update_title)
         val messageView = dialog.findViewById<TextView>(R.id.update_message)
         val progressBox = dialog.findViewById<LinearLayout>(R.id.update_progress_box)
         val progressBar = dialog.findViewById<ProgressBar>(R.id.update_progress_bar)
+        val progressCloud = dialog.findViewById<View>(R.id.update_progress_cloud)
         val progressText = dialog.findViewById<TextView>(R.id.update_progress_text)
         val buttonBox = dialog.findViewById<LinearLayout>(R.id.update_button_box)
         val cancelBtn = dialog.findViewById<TextView>(R.id.update_cancel)
@@ -279,29 +293,18 @@ class MainActivity : LoadingActivity() {
         titleView.scaleY = 0.8f
         titleView.animate().scaleX(1f).scaleY(1f).setDuration(350)
             .setInterpolator(OvershootInterpolator()).start()
-        // 猫咪圆环一直转，猫脸上下浮动
-        val ringAnim = ObjectAnimator.ofFloat(ring, "rotation", 0f, 360f).apply {
-            duration = 2500L
-            interpolator = LinearInterpolator()
-            repeatCount = ValueAnimator.INFINITE
-            start()
-        }
-        val faceAnim = ObjectAnimator.ofFloat(face, "translationY", 0f, -10f, 0f).apply {
-            duration = 1200L
-            repeatCount = ValueAnimator.INFINITE
-            start()
-        }
         // 更新内容直接显示全文，不打字机
         messageView.text = body.ifEmpty { "淑婷分身有新版本。" }
         dialog.setOnDismissListener {
             updatePolling = false
-            ringAnim.cancel()
-            faceAnim.cancel()
             updateDialog = null
         }
 
         cancelBtn.setOnClickListener { dialog.dismiss() }
         nowBtn.setOnClickListener {
+            // 确认一击：爆裂 + ドン!
+            SakugaFX.burstAtCenter(nowBtn)
+            SakugaFX.sfxAt(nowBtn, SakugaFX.SFX_DON, nowBtn.width / 2f, -8f)
             if (apkUrl.isNullOrEmpty()) {
                 if (htmlUrl.isNotEmpty()) {
                     startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(htmlUrl)))
@@ -312,10 +315,13 @@ class MainActivity : LoadingActivity() {
                 progressBox.visibility = View.VISIBLE
                 progressBar.progress = 0
                 progressText.text = getString(R.string.update_downloading_percent, 0)
-                startUpdateDownload(tag, apkUrl, progressBar, progressText, progressBox, buttonBox)
+                startUpdateDownload(
+                    tag, apkUrl, progressBar, progressText, progressBox, buttonBox, progressCloud
+                )
             }
         }
         updateDialog = dialog
+        SakugaFX.attachToWindow(dialog.window)
         dialog.show()
     }
 
@@ -349,15 +355,6 @@ class MainActivity : LoadingActivity() {
     private fun previewInstalledAppList() {
         val viewModel = ViewModelProvider(this, InjectionUtil.getListFactory()).get(ListViewModel::class.java)
         viewModel.previewInstalledList()
-    }
-
-    private fun setupBlur() {
-        viewBinding.blurView.setupWith(viewBinding.root)
-            .setBlurAlgorithm(RenderScriptBlur(this))
-            .setBlurRadius(8f)
-            .setBlurAutoUpdate(true)
-            .setHasFixedTransformationMatrix(true)
-        viewBinding.blurView.setOverlayColor(Color.parseColor("#80FFFFFF"))
     }
 
     private fun initToolbarSubTitle() {
@@ -402,12 +399,27 @@ class MainActivity : LoadingActivity() {
                 currentUser = fragmentList[position].userID
                 updateUserRemark(currentUser)
                 showFloatButton(true)
+                // 切页落点：圆点处扬起一小团烟
+                SakugaFX.puffAt(
+                    viewBinding.dotsIndicator,
+                    viewBinding.dotsIndicator.width / 2f,
+                    viewBinding.dotsIndicator.height / 2f,
+                    10f
+                )
             }
         })
 
     }
 
     private fun initFab() {
+        // 加号：一按压扁，松开爆裂 + ドン!
+        SakugaFX.attachPress(viewBinding.fab) { fx, x, y ->
+            SakugaFX.burst(fx, x, y)
+            SakugaFX.sfx(
+                fx, SakugaFX.SFX_DON, x,
+                y - 48f * resources.displayMetrics.density
+            )
+        }
         viewBinding.fab.setOnClickListener {
             val userId = viewBinding.viewPager.currentItem
             val intent = Intent(this, ListActivity::class.java)

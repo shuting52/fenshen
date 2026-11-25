@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 可按卡片：Sakuga 卡片 + 薰衣草按压涟漪 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/soft">
+    <item android:drawable="@drawable/bg_sakuga_card" />
+</ripple>

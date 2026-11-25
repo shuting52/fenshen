@@ -3,8 +3,10 @@ package top.niunaijun.blackboxa.view.setting
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.PreferenceGroupAdapter
 import androidx.preference.SwitchPreferenceCompat
 import top.niunaijun.blackbox.BlackBoxCore
 import top.niunaijun.blackboxa.R
@@ -12,6 +14,7 @@ import top.niunaijun.blackboxa.app.AppManager
 import top.niunaijun.blackboxa.util.toast
 import top.niunaijun.blackboxa.view.chook.LibcHookActivity
 import top.niunaijun.blackboxa.view.gms.GmsManagerActivity
+import top.niunaijun.blackboxa.view.sakuga.SakugaFX
 import top.niunaijun.blackboxa.view.xp.XpActivity
 
 /**
@@ -42,6 +45,7 @@ class SettingFragment : PreferenceFragmentCompat() {
 
         xpEnable.setOnPreferenceChangeListener { _, newValue ->
             BlackBoxCore.get().isXPEnable = (newValue == true)
+            sakugaToggle(xpEnable)
             true
         }
         //xp模块跳转
@@ -115,8 +119,23 @@ class SettingFragment : PreferenceFragmentCompat() {
                 }
             }
 
+            sakugaToggle(preference)
             toast(R.string.restart_module)
             return@setOnPreferenceChangeListener true
+        }
+    }
+
+    /** 开关拨动：开关处溅起水花 + 卡一声（手绘 43 帧开关搬不过来，这是代码画的等价反应）。 */
+    private fun sakugaToggle(preference: Preference) {
+        val adapter = listView.adapter as? PreferenceGroupAdapter ?: return
+        for (i in 0 until adapter.itemCount) {
+            if (adapter.getItem(i) !== preference) continue
+            val holder = listView.findViewHolderForAdapterPosition(i) ?: return
+            val widgetFrame = holder.itemView.findViewById<ViewGroup>(android.R.id.widget_frame)
+            val sw = widgetFrame?.getChildAt(0) ?: holder.itemView
+            SakugaFX.splashAt(sw, sw.width / 2f, sw.height / 2f)
+            SakugaFX.sfxAt(sw, SakugaFX.SFX_KACHI, sw.width / 2f, -10f, sizeSp = 18f)
+            return
         }
     }
 }

@@ -1,26 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Liquid Glass 主题（bilalgursen/liquid-glass 设计语言）：克制的中性底 + 品牌蓝 -->
+<!-- Sakuga VFX 主题（finktheartist/sakuga-vfx 的 sk 变量与 P 原值）：
+     白纸 + 墨 + 薰衣草 + 紫线 + 粉红点缀。平色，没有渐变，没有模糊。 -->
 <resources>
+    <color name="paper">#FFFFFF</color>
+    <color name="ink">#1D1A4A</color>
+    <color name="dim">#8580B0</color>
+    <color name="soft">#B8B3FF</color>
+    <color name="pri">#8F8DF7</color>
+    <color name="acc">#FF5FA8</color>
+    <color name="track">#C9CBE0</color>
+    <color name="line">#5A4FD8</color>
+    <!-- 旧名映射（保持既有引用不断） -->
     <color name="primary">#FFFFFF</color>
-    <color name="primary_dark">#ECECEE</color>
-    <color name="primary_light">#FBFBFC</color>
-    <color name="accent">#3291FF</color>
-    <color name="primary_text">#0B0B0C</color>
-    <color name="secondary_text">#66666E</color>
-    <color name="tertiary_text">#6F6F76</color>
+    <color name="primary_dark">#C9CBE0</color>
+    <color name="primary_light">#FFFFFF</color>
+    <color name="accent">#FF5FA8</color>
+    <color name="primary_text">#1D1A4A</color>
+    <color name="secondary_text">#8580B0</color>
+    <color name="tertiary_text">#8580B0</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="background">#FBFBFC</color>
+    <color name="background">#FFFFFF</color>
     <color name="surface">#FFFFFF</color>
-    <color name="muted_bg">#F3F3F5</color>
-    <color name="stage">#ECECEE</color>
-    <!-- 描边：8% / 14% 黑 -->
-    <color name="border">#14000000</color>
-    <color name="border_strong">#24000000</color>
-    <!-- 玻璃卡：白 透明度 0.68（GlassCard 浅色磨砂值） -->
-    <color name="glass_bg">#ADFFFFFF</color>
-    <color name="brand">#3291FF</color>
-    <color name="brand_dark">#1F6FEB</color>
-    <color name="brand_ring">#2788F5</color>
+    <color name="muted_bg">#C9CBE0</color>
+    <color name="stage">#FFFFFF</color>
+    <!-- 描边：紫线 / 墨线 -->
+    <color name="border">#5A4FD8</color>
+    <color name="border_strong">#1D1A4A</color>
+    <color name="brand">#8F8DF7</color>
+    <color name="brand_dark">#5A4FD8</color>
+    <color name="brand_ring">#5A4FD8</color>
     <color name="success">#22C55E</color>
     <color name="danger">#EF4444</color>
 </resources>

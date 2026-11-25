@@ -8,6 +8,7 @@ import top.niunaijun.blackbox.fake.frameworks.BLocationManager
 import top.niunaijun.blackboxa.R
 import top.niunaijun.blackboxa.bean.FakeLocationBean
 import top.niunaijun.blackboxa.databinding.ItemFakeBinding
+import top.niunaijun.blackboxa.view.sakuga.SakugaFX
 import top.niunaijun.blackboxa.util.getString
 
 /**
@@ -24,6 +25,17 @@ class FakeLocationAdapter : RVHolderFactory() {
     }
 
     class FakeLocationVH(itemView:View):RVHolder<FakeLocationBean>(itemView){
+
+        init {
+            // 点按：压扁，松开爆裂 + ドン!
+            SakugaFX.attachPress(itemView) { fx, x, y ->
+                SakugaFX.burst(fx, x, y)
+                SakugaFX.sfx(
+                    fx, SakugaFX.SFX_DON, x,
+                    y - 48f * itemView.resources.displayMetrics.density
+                )
+            }
+        }
 
         private val binding = ItemFakeBinding.bind(itemView)
 

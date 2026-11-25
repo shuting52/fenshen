@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 设置页胶囊卡（带开关）：透明胶囊 + 透镜，文字去阴影；开关由框架放进 widget_frame -->
+<!-- 设置页卡片（带开关）：Sakuga 白纸卡，文字去阴影；开关由框架放进 widget_frame -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -8,14 +8,9 @@
     android:layout_marginEnd="16dp"
     android:layout_marginTop="6dp"
     android:layout_marginBottom="6dp"
-    android:background="@drawable/bg_capsule_ripple"
+    android:background="@drawable/bg_sakuga_ripple"
     android:clickable="true"
     android:focusable="true">
-
-    <top.niunaijun.blackboxa.view.glass.LiquidGlassView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:cornerRadius="40dp" />
 
     <LinearLayout
         android:layout_width="match_parent"

@@ -1,8 +1,6 @@
 package top.niunaijun.blackboxa.view.base
 
-import android.view.KeyEvent
-import com.roger.catloadinglibrary.CatLoadingView
-import top.niunaijun.blackboxa.R
+import top.niunaijun.blackboxa.view.sakuga.SakugaLoadingDialog
 
 /**
  *
@@ -12,34 +10,24 @@ import top.niunaijun.blackboxa.R
  */
 abstract class LoadingActivity : BaseActivity() {
 
-    private lateinit var loadingView: CatLoadingView
+    private var loadingDialog: SakugaLoadingDialog? = null
 
 
     /** text 只在创建分身时传“正在创建，请稍等”；其它操作（打开、卸载、清数据）不动，还是默认的 LOADING... */
     fun showLoading(text: String? = null) {
-        if (!this::loadingView.isInitialized) {
-            loadingView = CatLoadingView()
+        val dialog = loadingDialog?.takeIf { it.isAdded } ?: SakugaLoadingDialog().also {
+            loadingDialog = it
         }
-        loadingView.setText(text ?: "LOADING...")
-
-        if (!loadingView.isAdded) {
-            loadingView.setBackgroundColor(R.color.primary)
-            loadingView.show(supportFragmentManager, "")
+        dialog.setLoadingText(text ?: "LOADING...")
+        if (!dialog.isAdded) {
+            dialog.show(supportFragmentManager, "sakuga_loading")
             supportFragmentManager.executePendingTransactions()
-            loadingView.setClickCancelAble(false)
-            loadingView.dialog?.setOnKeyListener { _, keyCode, _ ->
-                if (keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_ESCAPE) {
-                    return@setOnKeyListener true
-                }
-                false
-            }
         }
     }
 
 
     fun hideLoading() {
-        if (this::loadingView.isInitialized) {
-            loadingView.dismiss()
-        }
+        loadingDialog?.dismissAllowingStateLoss()
+        loadingDialog = null
     }
 }

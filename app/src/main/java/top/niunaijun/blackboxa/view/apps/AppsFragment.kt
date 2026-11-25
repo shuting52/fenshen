@@ -30,6 +30,7 @@ import top.niunaijun.blackboxa.util.inflate
 import top.niunaijun.blackboxa.util.toast
 import top.niunaijun.blackboxa.view.base.LoadingActivity
 import top.niunaijun.blackboxa.view.main.MainActivity
+import top.niunaijun.blackboxa.view.sakuga.SakugaFX
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.abs
@@ -198,13 +199,22 @@ class AppsFragment : Fragment() {
     }
 
     /** 批量删除：长按一个分身进多选，再点别的分身勾上，底部一键删 */
-    private fun enterSelectionMode(first: AppInfo) {
+    private fun enterSelectionMode(first: AppInfo, anchor: View? = null) {
         appsAdapter.selectMode = true
         appsAdapter.selected.add(appsAdapter.selectionKey(first))
         mAdapter.notifyDataSetChanged()
         viewBinding.batchBar.visibility = View.VISIBLE
         (requireActivity() as MainActivity).showFloatButton(false)
         updateBatchBar()
+        // 进多选：一道斩击 + ズザッ
+        if (anchor != null) {
+            SakugaFX.slashAtCenter(anchor)
+            SakugaFX.sfxAt(
+                anchor, SakugaFX.SFX_ZUZA,
+                anchor.width / 2f, anchor.height / 2f - 24f,
+                sizeSp = 18f, dotted = true
+            )
+        }
     }
 
     private fun exitSelectionMode() {
@@ -217,9 +227,27 @@ class AppsFragment : Fragment() {
 
     private fun toggleSelection(data: AppInfo, position: Int) {
         val key = appsAdapter.selectionKey(data)
-        if (!appsAdapter.selected.remove(key)) appsAdapter.selected.add(key)
+        val nowSelected = if (!appsAdapter.selected.remove(key)) {
+            appsAdapter.selected.add(key)
+            true
+        } else {
+            false
+        }
         mAdapter.notifyItemChanged(position)
         updateBatchBar()
+        // 勾上：水晶碎片飞起来 + ズザッ
+        if (nowSelected) {
+            val holder = viewBinding.recyclerView.findViewHolderForAdapterPosition(position)
+            val itemView = holder?.itemView
+            if (itemView != null) {
+                SakugaFX.shardsAt(itemView, itemView.width / 2f, itemView.height / 2f)
+                SakugaFX.sfxAt(
+                    itemView, SakugaFX.SFX_ZUZA,
+                    itemView.width / 2f, itemView.height / 2f - 24f,
+                    sizeSp = 18f, dotted = true
+                )
+            }
+        }
     }
 
     private fun updateBatchBar() {
@@ -285,7 +313,7 @@ class AppsFragment : Fragment() {
                         }
 
                         R.id.app_batch_delete -> {
-                            enterSelectionMode(data)
+                            enterSelectionMode(data, view)
                         }
                     }
                     return@setOnMenuItemClickListener true

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- BaseActivity 全局注入的模糊层 id -->
-    <item name="injected_blur_view" type="id" />
+    <!-- SakugaFX 全屏效果层的 id（挂在窗口 decor 上） -->
+    <item name="sakuga_fx_view" type="id" />
 </resources>

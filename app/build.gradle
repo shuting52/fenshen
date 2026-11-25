@@ -18,8 +18,8 @@ android {
         applicationId "mis.shuting.fensheng"
         minSdkVersion 21
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 36
-        versionName "2.3.21"
+        versionCode 37
+        versionName "2.3.22"
 
         flavorDimensions "BlackBox32"
     }
@@ -176,7 +176,6 @@ dependencies {
     //dialog
     implementation 'com.github.nukc.stateview:kotlin:2.2.0'
     //状态控制控件
-    implementation 'com.roger.catloadinglibrary:catloadinglibrary:1.0.9'
     //加载dialog
     implementation 'com.github.Ferfalk:SimpleSearchView:0.2.0'
     //searchView

@@ -3,7 +3,6 @@ package top.niunaijun.blackboxa.view.list
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.text.InputType
 import android.os.Bundle
 import android.view.Menu
@@ -15,7 +14,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import cbfg.rvadapter.RVAdapter
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.input.input
-import eightbitlab.com.blurview.RenderScriptBlur
 import com.ferfalk.simplesearchview.SimpleSearchView
 import top.niunaijun.blackboxa.R
 import top.niunaijun.blackboxa.bean.InstalledAppBean
@@ -23,12 +21,10 @@ import top.niunaijun.blackboxa.databinding.ActivityListBinding
 import top.niunaijun.blackboxa.util.InjectionUtil
 import top.niunaijun.blackboxa.util.inflate
 import top.niunaijun.blackboxa.view.base.BaseActivity
-import top.niunaijun.blackboxa.view.glass.GlassWallpaper
+import top.niunaijun.blackboxa.view.sakuga.SakugaFX
 
 
 class ListActivity : BaseActivity() {
-
-    override val hasOwnGlassBackground: Boolean = true
 
     private val viewBinding: ActivityListBinding by inflate()
 
@@ -43,8 +39,6 @@ class ListActivity : BaseActivity() {
         setContentView(viewBinding.root)
 
         initToolbar(viewBinding.toolbarLayout.toolbar, R.string.installed_app, true)
-        Thread { GlassWallpaper.prepare(this) }.start()
-        setupBlurView()
 
         mAdapter = RVAdapter<InstalledAppBean>(this,ListAdapter()).bind(viewBinding.recyclerView).setItemClickListener { _, item, _ ->
             showCloneCountDialog(item)
@@ -55,16 +49,6 @@ class ListActivity : BaseActivity() {
 
         initSearchView()
         initViewModel()
-    }
-
-    /** 整屏磨砂玻璃：壁纸 + 强模糊 + 晨光玻璃面 */
-    private fun setupBlurView() {
-        viewBinding.blurView.setupWith(viewBinding.root)
-            .setBlurAlgorithm(RenderScriptBlur(this))
-            .setBlurRadius(8f)
-            .setBlurAutoUpdate(true)
-            .setHasFixedTransformationMatrix(true)
-        viewBinding.blurView.setOverlayColor(Color.parseColor("#80FFFFFF"))
     }
 
     /** 点一下应用：输入要创建的分身个数，一键批量分身（1-30 个） */
@@ -88,6 +72,14 @@ class ListActivity : BaseActivity() {
         viewBinding.searchView.setOnQueryTextListener(object : SimpleSearchView.OnQueryTextListener {
             override fun onQueryTextChange(newText: String): Boolean {
                 filterApp(newText)
+                // 每敲一个字，搜索框右端扬起一小团尘
+                if (newText.isNotEmpty()) {
+                    SakugaFX.puffAt(
+                        viewBinding.searchView,
+                        viewBinding.searchView.width * 0.9f,
+                        viewBinding.searchView.height / 2f, 8f
+                    )
+                }
                 return true
             }
 

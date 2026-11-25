@@ -7,6 +7,7 @@ import cbfg.rvadapter.RVHolderFactory
 import top.niunaijun.blackboxa.R
 import top.niunaijun.blackboxa.bean.XpModuleInfo
 import top.niunaijun.blackboxa.databinding.ItemXpBinding
+import top.niunaijun.blackboxa.view.sakuga.SakugaFX
 
 
 /**
@@ -23,6 +24,17 @@ class XpAdapter : RVHolderFactory() {
 
     class XpVH(itemView: View) : RVHolder<XpModuleInfo>(itemView) {
 
+        init {
+            // 点按：压扁，松开爆裂 + ドン!
+            SakugaFX.attachPress(itemView) { fx, x, y ->
+                SakugaFX.burst(fx, x, y)
+                SakugaFX.sfx(
+                    fx, SakugaFX.SFX_DON, x,
+                    y - 48f * itemView.resources.displayMetrics.density
+                )
+            }
+        }
+
         private val binding = ItemXpBinding.bind(itemView)
 
         override fun setContent(item: XpModuleInfo, isSelected: Boolean, payload: Any?) {
@@ -32,6 +44,12 @@ class XpAdapter : RVHolderFactory() {
             binding.enable.isChecked = item.enable
             binding.enable.setOnCheckedChangeListener { buttonView, _ ->
                 if (buttonView.isPressed) {
+                    // 勾上：水晶碎片 + ズザッ
+                    SakugaFX.shardsAt(buttonView, buttonView.width / 2f, buttonView.height / 2f)
+                    SakugaFX.sfxAt(
+                        buttonView, SakugaFX.SFX_ZUZA,
+                        buttonView.width / 2f, -10f, sizeSp = 18f, dotted = true
+                    )
                     binding.root.performClick()
                 }
 

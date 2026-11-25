@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 空状态：不要那张小鸟白底图了，改成显眼的流光大字 -->
+<!-- 空状态：Sakuga 白纸上的平面墨字，不用渐变流光 -->
 <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:gravity="center"
         android:orientation="vertical"
         android:layout_width="match_parent" android:layout_height="match_parent">
 
-    <top.niunaijun.blackboxa.view.glass.ShimmerTextView
+    <TextView
             android:text="@string/empty_empty"
             android:textSize="30sp"
             android:textStyle="bold"
+            android:textColor="@color/ink"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 

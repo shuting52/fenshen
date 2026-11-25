@@ -6,7 +6,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:theme="@style/ToolBarColorStyle"
-        android:background="@drawable/bg_glass_topbar"
+        android:background="@drawable/bg_sakuga_topbar"
         app:subtitleTextColor="@color/primary_text"
         app:titleTextColor="@color/primary_text">
 

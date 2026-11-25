@@ -8,6 +8,7 @@ import top.niunaijun.blackboxa.R
 import top.niunaijun.blackboxa.app.CrashLog
 import top.niunaijun.blackboxa.bean.AppInfo
 import top.niunaijun.blackboxa.databinding.ItemAppBinding
+import top.niunaijun.blackboxa.view.sakuga.SakugaFX
 
 /**
  *
@@ -36,6 +37,17 @@ class AppsAdapter : RVHolderFactory() {
 
         val binding = ItemAppBinding.bind(itemView)
 
+        init {
+            // 点按：压扁，松开爆裂 + ドン!
+            SakugaFX.attachPress(itemView) { fx, x, y ->
+                SakugaFX.burst(fx, x, y)
+                SakugaFX.sfx(
+                    fx, SakugaFX.SFX_DON, x,
+                    y - 48f * itemView.resources.displayMetrics.density
+                )
+            }
+        }
+
         override fun setContent(item: AppInfo, isSelected: Boolean, payload: Any?) {
             if (!firstBindLogged) {
                 firstBindLogged = true
@@ -54,6 +66,14 @@ class AppsAdapter : RVHolderFactory() {
             binding.check.setOnCheckedChangeListener { _, checked ->
                 if (checked) selected.add(selectionKey(item))
                 else selected.remove(selectionKey(item))
+                // 直接点勾选框：水晶碎片 + ズザッ
+                if (checked) {
+                    SakugaFX.shardsAt(binding.check, 14f, 14f)
+                    SakugaFX.sfxAt(
+                        binding.check, SakugaFX.SFX_ZUZA, 14f, -10f,
+                        sizeSp = 18f, dotted = true
+                    )
+                }
                 onSelectionChanged?.invoke()
             }
         }

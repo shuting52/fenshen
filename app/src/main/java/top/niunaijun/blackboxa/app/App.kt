@@ -3,6 +3,7 @@ package top.niunaijun.blackboxa.app
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
+import top.niunaijun.blackboxa.view.sakuga.SakugaToast
 
 /**
  *
@@ -35,6 +36,7 @@ class App : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        SakugaToast.register(this)
         CrashLog.bread("App onCreate start")
         CrashLog.startWatchdog()
         AppManager.doOnCreate(mContext)

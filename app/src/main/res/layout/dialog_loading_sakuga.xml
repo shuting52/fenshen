@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sakuga 加载弹窗：暴风雨云 + ゴゴゴゴ + 状态文字 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_sakuga_card"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="28dp">
+
+    <top.niunaijun.blackboxa.view.sakuga.SakugaCloudView
+        android:id="@+id/loading_cloud"
+        android:layout_width="72dp"
+        android:layout_height="48dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="ゴゴゴゴ"
+        android:textColor="@color/accent"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/loading_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textColor="@color/primary_text"
+        android:textSize="15sp" />
+
+</LinearLayout>

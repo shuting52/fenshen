@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sakuga 冲击星：薰衣草面 + 紫描边，中心一颗粉红四角星 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="72dp"
+    android:height="72dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    <path
+        android:fillColor="@color/soft"
+        android:strokeColor="@color/line"
+        android:strokeWidth="3"
+        android:pathData="M 60.0,14.0 L 64.9,41.6 L 83.0,20.2 L 77.7,42.3 L 99.8,37.0 L 78.4,55.1 L 106.0,60.0 L 84.1,66.5 L 99.8,83.0 L 73.4,73.4 L 83.0,99.8 L 66.5,84.1 L 60.0,106.0 L 55.1,78.4 L 37.0,99.8 L 42.3,77.7 L 20.2,83.0 L 41.6,64.9 L 14.0,60.0 L 35.9,53.5 L 20.2,37.0 L 46.6,46.6 L 37.0,20.2 L 53.5,35.9 Z" />
+    <path
+        android:fillColor="@color/accent"
+        android:pathData="M 60,44 L 66,60 L 60,76 L 54,60 Z" />
+</vector>

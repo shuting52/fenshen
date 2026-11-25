@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sakuga 卡片：白纸面 + 3dp 墨描边 + 向右 6dp、向下 7dp 的薰衣草平色阴影（sk-sh 原值）。
+     没有渐变，没有模糊；阴影是一块实色，不是虚影。 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:left="6dp"
+        android:top="7dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/soft" />
+            <corners android:radius="15dp" />
+        </shape>
+    </item>
+    <item
+        android:bottom="7dp"
+        android:right="6dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/paper" />
+            <stroke
+                android:width="3dp"
+                android:color="@color/ink" />
+            <corners android:radius="15dp" />
+        </shape>
+    </item>
+</layer-list>
