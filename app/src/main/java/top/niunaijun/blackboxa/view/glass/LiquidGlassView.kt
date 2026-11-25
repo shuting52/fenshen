@@ -11,6 +11,7 @@ import android.graphics.RectF
 import android.graphics.Shader
 import android.util.AttributeSet
 import android.view.View
+import top.niunaijun.blackboxa.R
 import top.niunaijun.blackboxa.util.Resolution
 
 /**
@@ -29,7 +30,7 @@ class LiquidGlassView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
-    private val cornerRadius = Resolution.convertDpToPixel(28f, context)
+    private val cornerRadius: Float
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
 
@@ -61,6 +62,13 @@ class LiquidGlassView @JvmOverloads constructor(
     private val verts = FloatArray((meshCols + 1) * (meshRows + 1) * 2)
 
     init {
+        // 圆角可配：默认 28dp（分身卡片）；设置页胶囊行传 40dp，圆角大于行高一半就成真胶囊
+        val a = context.obtainStyledAttributes(attrs, R.styleable.LiquidGlassView)
+        cornerRadius = a.getDimension(
+            R.styleable.LiquidGlassView_cornerRadius,
+            Resolution.convertDpToPixel(28f, context)
+        )
+        a.recycle()
         setWillNotDraw(false)
     }
 

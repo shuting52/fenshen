@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 设置页胶囊卡（带开关）：透明胶囊 + 透镜，文字去阴影；开关由框架放进 widget_frame -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginTop="6dp"
+    android:layout_marginBottom="6dp"
+    android:background="@drawable/bg_capsule_ripple"
+    android:clickable="true"
+    android:focusable="true">
+
+    <top.niunaijun.blackboxa.view.glass.LiquidGlassView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:cornerRadius="40dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingStart="20dp"
+        android:paddingTop="14dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="14dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@android:id/title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/primary_text"
+                android:textSize="17sp"
+                android:shadowColor="@android:color/transparent"
+                android:shadowDx="0"
+                android:shadowDy="0"
+                android:shadowRadius="0" />
+
+            <TextView
+                android:id="@android:id/summary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:lineSpacingExtra="2dp"
+                android:textColor="@color/secondary_text"
+                android:textSize="14sp"
+                android:shadowColor="@android:color/transparent"
+                android:shadowDx="0"
+                android:shadowDy="0"
+                android:shadowRadius="0" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@android:id/widget_frame"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="16dp" />
+    </LinearLayout>
+</FrameLayout>

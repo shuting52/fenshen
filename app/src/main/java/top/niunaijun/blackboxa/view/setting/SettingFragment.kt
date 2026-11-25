@@ -2,6 +2,7 @@ package top.niunaijun.blackboxa.view.setting
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreferenceCompat
@@ -24,6 +25,13 @@ class SettingFragment : PreferenceFragmentCompat() {
     private lateinit var xpEnable: SwitchPreferenceCompat
 
     private lateinit var xpModule: Preference
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        // 胶囊卡片之间不要分隔线
+        setDivider(null)
+        setDividerHeight(0)
+    }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.setting, rootKey)

@@ -3,20 +3,13 @@ package top.niunaijun.blackboxa.view.main
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.app.Dialog
-import android.app.DownloadManager
-import android.content.BroadcastReceiver
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
-import android.os.Handler
-import android.os.Looper
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -30,6 +23,8 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.core.content.FileProvider
 import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.ViewModelProvider
 import androidx.core.content.edit
@@ -74,51 +69,15 @@ class MainActivity : LoadingActivity() {
 
     private var currentUser = 0
 
-    private var updateDownloadId: Long = -1L
-    private var updateApkFileName: String? = null
-
     /** 上次查更新的时间（毫秒），回到 App 时超过 10 分钟就再查一次 */
     private var lastUpdateCheckTime: Long = 0L
 
-    /** 卡通更新弹窗：打开时不为空；下载进度轮询靠它停 */
+    /** 更新弹窗：打开时不为空；下载进行中标志，关弹窗就停下载 */
     private var updateDialog: Dialog? = null
     private var updatePolling: Boolean = false
 
-    /** 下载完成就直接调安装器，不跳浏览器 */
-    private val downloadReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action != DownloadManager.ACTION_DOWNLOAD_COMPLETE) return
-            val id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1L)
-            if (id != updateDownloadId) return
-            val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-            val cursor = dm.query(DownloadManager.Query().setFilterById(id))
-            if (cursor.moveToFirst()) {
-                val status = cursor.getInt(
-                    cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)
-                )
-                if (status == DownloadManager.STATUS_SUCCESSFUL) {
-                    updatePolling = false
-                    updateDialog?.dismiss()
-                    updateApkFileName?.let { installDownloadedApk(it) }
-                } else {
-                    updatePolling = false
-                    updateDialog?.let { d ->
-                        d.findViewById<TextView>(R.id.update_progress_text)
-                            ?.setText(R.string.update_download_failed)
-                        d.findViewById<LinearLayout>(R.id.update_button_box)
-                            ?.visibility = View.VISIBLE
-                        d.findViewById<LinearLayout>(R.id.update_progress_box)
-                            ?.visibility = View.GONE
-                    } ?: toast(R.string.update_download_failed)
-                }
-            }
-            cursor.close()
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        showCrashLogIfAny()
         CrashLog.bread("MainActivity onCreate")
         setContentView(viewBinding.root)
         CrashLog.bread("MainActivity setContentView ok")
@@ -140,32 +99,8 @@ class MainActivity : LoadingActivity() {
         // 液态玻璃：后台先把模糊壁纸准备好，卡片画出来就是透镜
         Thread { GlassWallpaper.prepare(this) }.start()
         cleanOldUpdateApks()
-        registerReceiver(
-            downloadReceiver,
-            IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
-        )
         checkAppUpdate()
         CrashLog.bread("MainActivity onCreate ok")
-    }
-
-    /** 诊断版：上次闪退留下的记录，先弹出来，点复制发我 */
-    private fun showCrashLogIfAny() {
-        val f = CrashLog.file() ?: return
-        if (!f.exists()) return
-        val text = try { f.readText() } catch (e: Exception) { return }
-        if (!text.contains("CRASH")) return
-        val shown = if (text.length > 4000) text.takeLast(4000) else text
-        MaterialDialog(this).show {
-            title(R.string.crash_last_title)
-            message(text = shown)
-            positiveButton(R.string.copy_text) {
-                val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                cm.setPrimaryClip(ClipData.newPlainText("crash", text))
-                toast(R.string.copy_done)
-            }
-            negativeButton(R.string.crash_clear) { f.delete() }
-            neutralButton(R.string.cancel)
-        }
     }
 
     /** 回到 App 也查一次：之前只在冷启动时查，App 一直挂在后台就永远查不到新版 */
@@ -175,15 +110,6 @@ class MainActivity : LoadingActivity() {
         if (now - lastUpdateCheckTime > 10 * 60 * 1000L) {
             checkAppUpdate()
         }
-    }
-
-    override fun onDestroy() {
-        try {
-            unregisterReceiver(downloadReceiver)
-        } catch (e: Exception) {
-            // 没注册过就不用管
-        }
-        super.onDestroy()
     }
 
     /** 装完新版下次打开，删掉上次下载残留的安装包 */
@@ -252,24 +178,71 @@ class MainActivity : LoadingActivity() {
         }.start()
     }
 
-    /** 系统下载器下载新版：点“立即更新”就直接下，不再先跳“安装未知应用”设置页；
-     *  下载完自动调安装器。第一次安装时系统安装器自己会问一次（安卓的规定），
-     *  允许一次之后就再也不会出现。 */
-    private fun startUpdateDownload(tag: String, apkUrl: String) {
+    /** 自己下载新版，不走系统下载器：系统下载器下完会在状态栏弹“下载已完成”通知，
+     *  自己下就没有任何通知，进度直接写进弹窗，下载完自动调安装器。
+     *  第一次安装时系统安装器自己会问一次（安卓的规定），允许一次之后就再也不会出现。
+     *  关掉弹窗就取消下载，半截文件删掉。 */
+    private fun startUpdateDownload(
+        tag: String, apkUrl: String,
+        progressBar: ProgressBar, progressText: TextView,
+        progressBox: LinearLayout, buttonBox: LinearLayout
+    ) {
         val fileName = "Shuting-Fenshen-$tag.apk"
-        updateApkFileName = fileName
-        val request = DownloadManager.Request(Uri.parse(apkUrl))
-            .setTitle("淑婷分身 $tag")
-            .setDescription(getString(R.string.update_downloading))
-            .setNotificationVisibility(
-                DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED
-            )
-            .setDestinationInExternalFilesDir(
-                this, Environment.DIRECTORY_DOWNLOADS, fileName
-            )
-            .setMimeType("application/vnd.android.package-archive")
-        val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-        updateDownloadId = dm.enqueue(request)
+        val outFile = File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), fileName)
+        updatePolling = true
+        Thread {
+            try {
+                val conn = URL(apkUrl).openConnection() as HttpURLConnection
+                conn.connectTimeout = 15000
+                conn.readTimeout = 30000
+                conn.instanceFollowRedirects = true
+                conn.connect()
+                if (conn.responseCode !in 200..299) throw IOException("HTTP ${conn.responseCode}")
+                val total = conn.contentLengthLong
+                var done = 0L
+                conn.inputStream.use { input ->
+                    FileOutputStream(outFile).use { output ->
+                        val buf = ByteArray(64 * 1024)
+                        while (updatePolling) {
+                            val n = input.read(buf)
+                            if (n <= 0) break
+                            output.write(buf, 0, n)
+                            done += n
+                            if (total > 0) {
+                                val percent = (done * 100 / total).toInt().coerceIn(0, 100)
+                                runOnUiThread {
+                                    progressBar.progress = percent
+                                    progressText.text =
+                                        getString(R.string.update_downloading_percent, percent)
+                                }
+                            }
+                        }
+                    }
+                }
+                // 弹窗关了就是取消下载，半截文件删掉
+                if (!updatePolling) {
+                    outFile.delete()
+                    return@Thread
+                }
+                if (total > 0 && done < total) throw IOException("incomplete")
+                runOnUiThread {
+                    updatePolling = false
+                    if (isFinishing || isDestroyed) return@runOnUiThread
+                    updateDialog?.dismiss()
+                    installDownloadedApk(fileName)
+                }
+            } catch (e: Exception) {
+                CrashLog.bread("update download failed: ${e.message}")
+                outFile.delete()
+                runOnUiThread {
+                    updatePolling = false
+                    if (isFinishing || isDestroyed || updateDialog?.isShowing != true) return@runOnUiThread
+                    progressText.setText(R.string.update_download_failed)
+                    buttonBox.visibility = View.VISIBLE
+                    progressBox.visibility = View.GONE
+                }
+            }
+        }.start()
     }
 
     /** 更新弹窗：猫咪圆环转圈、猫脸上下浮动、标题弹出，内容直接显示全文。
@@ -339,49 +312,11 @@ class MainActivity : LoadingActivity() {
                 progressBox.visibility = View.VISIBLE
                 progressBar.progress = 0
                 progressText.text = getString(R.string.update_downloading_percent, 0)
-                startUpdateDownload(tag, apkUrl)
-                startDownloadProgressPolling(progressBar, progressText)
+                startUpdateDownload(tag, apkUrl, progressBar, progressText, progressBox, buttonBox)
             }
         }
         updateDialog = dialog
         dialog.show()
-    }
-
-    /** 下载进度轮询：每 300ms 查一次下载器，把进度写进弹窗 */
-    private fun startDownloadProgressPolling(progressBar: ProgressBar, progressText: TextView) {
-        updatePolling = true
-        Thread {
-            val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-            while (updatePolling) {
-                try {
-                    val cursor = dm.query(DownloadManager.Query().setFilterById(updateDownloadId))
-                    if (cursor.moveToFirst()) {
-                        val total = cursor.getLong(
-                            cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
-                        )
-                        val done = cursor.getLong(
-                            cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)
-                        )
-                        val status = cursor.getInt(
-                            cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)
-                        )
-                        val percent = if (total > 0) (done * 100 / total).toInt() else 0
-                        runOnUiThread {
-                            progressBar.progress = percent
-                            progressText.text =
-                                getString(R.string.update_downloading_percent, percent)
-                        }
-                        if (status != DownloadManager.STATUS_PENDING &&
-                            status != DownloadManager.STATUS_RUNNING
-                        ) break
-                    }
-                    cursor.close()
-                } catch (e: Exception) {
-                    break
-                }
-                Thread.sleep(300)
-            }
-        }.start()
     }
 
     private fun installDownloadedApk(fileName: String) {

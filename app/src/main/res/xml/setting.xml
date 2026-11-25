@@ -1,45 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 设置页：每项都是透明胶囊 + 透镜，每项下面都有用法说明 -->
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <PreferenceCategory app:title="@string/xp_setting">
+    <PreferenceCategory
+            app:title="@string/xp_setting"
+            app:layout="@layout/preference_category_capsule">
 
         <SwitchPreferenceCompat
                 app:key="xp_enable"
-                app:title="@string/enable_xposed" />
-
+                app:title="@string/enable_xposed"
+                app:summary="@string/xp_enable_summary"
+                app:layout="@layout/preference_capsule_switch" />
 
         <Preference
                 android:dependency="xp_enable"
                 app:key="xp_module"
                 app:summary="@string/jump_module"
-                app:title="@string/module_setting" />
+                app:title="@string/module_setting"
+                app:layout="@layout/preference_capsule" />
 
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="@string/other">
+    <PreferenceCategory
+            app:title="@string/other"
+            app:layout="@layout/preference_category_capsule">
 
         <Preference
                 android:key="gms_manager"
                 android:title="@string/gms_manager"
-                android:summary="@string/jump_gms"/>
+                android:summary="@string/jump_gms"
+                app:layout="@layout/preference_capsule" />
 
         <SwitchPreferenceCompat
                 app:key="xp_hide"
-                app:title="@string/hide_xposed" />
+                app:title="@string/hide_xposed"
+                app:summary="@string/xp_hide_summary"
+                app:layout="@layout/preference_capsule_switch" />
 
         <SwitchPreferenceCompat
                 app:key="root_hide"
-                app:title="@string/hide_root" />
+                app:title="@string/hide_root"
+                app:summary="@string/root_hide_summary"
+                app:layout="@layout/preference_capsule_switch" />
 
         <Preference
                 android:key="libc_hook_disable"
                 android:title="@string/libc_hook_disable"
-                android:summary="@string/libc_hook_disable_summary"/>
+                android:summary="@string/libc_hook_disable_summary"
+                app:layout="@layout/preference_capsule" />
 
         <SwitchPreferenceCompat
                 app:key="daemon_enable"
-                app:title="@string/daemon_enable" />
+                app:title="@string/daemon_enable"
+                app:summary="@string/daemon_enable_summary"
+                app:layout="@layout/preference_capsule_switch" />
 
     </PreferenceCategory>
 
