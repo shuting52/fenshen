@@ -16,6 +16,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.Window
 import android.view.animation.OvershootInterpolator
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -51,6 +52,7 @@ import top.niunaijun.blackboxa.view.list.ListViewModel
 import top.niunaijun.blackboxa.view.fake.FakeManagerActivity
 import top.niunaijun.blackboxa.view.list.ListActivity
 import top.niunaijun.blackboxa.view.sakuga.SakugaFX
+import top.niunaijun.blackboxa.view.sakuga.SakugaMenu
 import top.niunaijun.blackboxa.view.setting.SettingActivity
 
 
@@ -73,6 +75,9 @@ class MainActivity : LoadingActivity() {
 
     /** 欢迎弹窗正开着：先不弹更新提醒，等下次再查 */
     private var welcomeShowing = false
+
+    /** 右上角 ⋮ 菜单：存一份，Sakuga 菜单从这儿读标题 */
+    private var optionsMenu: Menu? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -106,6 +111,8 @@ class MainActivity : LoadingActivity() {
         if (now - lastUpdateCheckTime > 10 * 60 * 1000L) {
             checkAppUpdate()
         }
+        // 顶栏的 ⋮ 按钮是系统建的，菜单重建后可能换新的，回来就重新接一次
+        viewBinding.toolbarLayout.toolbar.post { attachOverflowMenu() }
     }
 
     /** 装完新版下次打开，删掉上次下载残留的安装包 */
@@ -592,7 +599,37 @@ class MainActivity : LoadingActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
+        optionsMenu = menu
+        // ⋮ 按钮是系统建的，等一帧、顶栏摆好位置再接管它的点击
+        viewBinding.toolbarLayout.toolbar.post { attachOverflowMenu() }
         return true
+    }
+
+    /** 接管右上角 ⋮：点它不再弹系统白菜单，改弹 Sakuga 菜单（逐项弹出 + 点按爆裂）。
+     *  找不到按钮就不接管，系统菜单照常弹，不会坏事。 */
+    private fun attachOverflowMenu() {
+        val toolbar = viewBinding.toolbarLayout.toolbar
+        val overflow = findOverflowButton(toolbar) ?: return
+        overflow.setOnClickListener { anchor ->
+            optionsMenu?.let { menu ->
+                SakugaMenu.show(anchor, menu) { item -> onOptionsItemSelected(item) }
+            }
+        }
+    }
+
+    /** 在顶栏里找 ⋮ 按钮：内容描述是“更多选项”（中文）或“More options”（英文） */
+    private fun findOverflowButton(root: ViewGroup): View? {
+        for (i in 0 until root.childCount) {
+            val child = root.getChildAt(i)
+            val desc = child.contentDescription?.toString().orEmpty()
+            if (child is ImageButton && (desc.contains("更多") || desc.contains("More"))) {
+                return child
+            }
+            if (child is ViewGroup) {
+                findOverflowButton(child)?.let { return it }
+            }
+        }
+        return null
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
