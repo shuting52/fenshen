@@ -22,6 +22,8 @@ import top.niunaijun.blackbox.core.env.BEnvironment
 import top.niunaijun.blackboxa.R
 import top.niunaijun.blackboxa.app.CloneSpace
 import top.niunaijun.blackboxa.app.CrashLog
+import top.niunaijun.blackboxa.app.CloneEscape
+import top.niunaijun.blackboxa.app.MuseLoginDetect
 import top.niunaijun.blackboxa.app.MuseUsage
 import top.niunaijun.blackboxa.bean.AppInfo
 import top.niunaijun.blackboxa.databinding.FragmentAppsBinding
@@ -78,6 +80,9 @@ class AppsFragment : Fragment() {
 
     /** 设头像时正在操作的分身（选完图后用它找关联的账号）。 */
     private var pendingAvatarInfo: AppInfo? = null
+
+    /** 正在打开的分身（打开成功后挂逃生通知）。 */
+    private var pendingLaunch: AppInfo? = null
 
     private val avatarPicker =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -140,6 +145,7 @@ class AppsFragment : Fragment() {
                 toggleSelection(data, position)
             } else {
                 showLoading()
+                pendingLaunch = data
                 viewModel.launchApk(data.packageName, data.userId)
             }
         }
@@ -164,6 +170,7 @@ class AppsFragment : Fragment() {
         viewModel.getInstalledApps(userID)
         MuseUsage.addListener(quotaListener)
         MuseUsage.fetch(requireContext())
+        scanMuseLogins()
     }
 
     /**
@@ -384,9 +391,11 @@ class AppsFragment : Fragment() {
         // 现在数据里只有一个账号（小组件那份），直接用它；以后数据扩成多账号再做列表。
         val account = cached.accounts.first()
         val linked = MuseUsage.getLink(context, userID, info.userId, info.packageName)
+        val detected = MuseLoginDetect.getCached(info.packageName, info.userId)
+        val loginLine = if (detected?.email != null) "\n\n这个分身里登的是：${detected.email}" else ""
         MaterialDialog(context).show {
             title(text = "关联 Muse 账号")
-            message(text = "${info.name} 关联后，分身下面会显示这个账号剩的额度。\n\n${account.label}" + if (linked != null) "\n\n当前已关联这个账号。" else "")
+            message(text = "${info.name} 关联后，分身下面会显示这个账号剩的额度。\n\n${account.label}$loginLine" + if (linked != null) "\n\n当前已关联这个账号。" else "")
             if (linked == null) {
                 positiveButton(text = "关联") {
                     MuseUsage.setLink(context, userID, info.userId, info.packageName, account.id)
@@ -436,6 +445,24 @@ class AppsFragment : Fragment() {
         }
     }
 
+    /** 扫一遍分身里登的 Muse 账号（后台读分身自己的数据），扫完刷新卡片。 */
+    private fun scanMuseLogins() {
+        if (!this::mAdapter.isInitialized) return
+        val items = mAdapter.getItems()
+        Thread {
+            var scanned = false
+            for (info in items) {
+                if (MuseLoginDetect.isMuseClone(info.packageName, info.name)) {
+                    MuseLoginDetect.detect(info.packageName, info.userId)
+                    scanned = true
+                }
+            }
+            if (scanned && isAdded) {
+                requireActivity().runOnUiThread { mAdapter.notifyDataSetChanged() }
+            }
+        }.start()
+    }
+
     private fun initData() {
         viewBinding.stateView.showLoading()
         viewModel.getInstalledApps(userID)
@@ -443,6 +470,7 @@ class AppsFragment : Fragment() {
 
             if (it != null) {
                 mAdapter.setItems(it)
+                scanMuseLogins()
                 if (it.isEmpty()) {
                     viewBinding.stateView.showEmpty()
                 } else {
@@ -468,6 +496,13 @@ class AppsFragment : Fragment() {
                 hideLoading()
                 if (!it) {
                     toast(R.string.start_fail)
+                    pendingLaunch = null
+                } else {
+                    // 分身打开了：挂一条逃生通知，卡住了点一下就能回首页。
+                    pendingLaunch?.let { info ->
+                        CloneEscape.show(requireContext(), info.packageName, info.userId, info.name)
+                    }
+                    pendingLaunch = null
                 }
             }
         }
@@ -482,6 +517,7 @@ class AppsFragment : Fragment() {
     override fun onStop() {
         super.onStop()
         MuseUsage.removeListener(quotaListener)
+        MuseLoginDetect.clearCache()
         viewModel.resultLiveData.value = null
         viewModel.launchLiveData.value = null
     }

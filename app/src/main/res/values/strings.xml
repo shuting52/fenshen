@@ -120,4 +120,8 @@
     <string name="app_link_muse">关联 Muse 账号</string>
     <string name="refresh_muse_usage">刷新 Muse 额度</string>
     <string name="app_set_avatar">设头像</string>
+    <string name="clone_escape_channel">分身运行中</string>
+    <string name="clone_escape_text">点一下回到分身首页</string>
+    <string name="clone_escape_stop">停止分身</string>
+    <string name="clone_escape_stopped">分身已停止</string>
 </resources>

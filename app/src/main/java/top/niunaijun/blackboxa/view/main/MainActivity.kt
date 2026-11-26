@@ -24,6 +24,7 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.view.menu.MenuBuilder
+import top.niunaijun.blackboxa.app.CloneEscape
 import androidx.core.content.FileProvider
 import java.io.File
 import java.io.FileOutputStream
@@ -85,6 +86,7 @@ class MainActivity : LoadingActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         CrashLog.bread("MainActivity onCreate")
+        handleEscapeIntent(intent)
         setContentView(viewBinding.root)
         CrashLog.bread("MainActivity setContentView ok")
         previewInstalledAppList()
@@ -111,10 +113,27 @@ class MainActivity : LoadingActivity() {
     /** 回到 App 也查一次：之前只在冷启动时查，App 一直挂在后台就永远查不到新版 */
     override fun onResume() {
         super.onResume()
+        // 回到首页了，逃生通知可以撤了。
+        CloneEscape.hide(this)
         val now = System.currentTimeMillis()
         if (now - lastUpdateCheckTime > 10 * 60 * 1000L) {
             checkAppUpdate()
         }
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        handleEscapeIntent(intent)
+    }
+
+    /** 逃生通知的“停止分身”点进来：停掉那个分身，关掉通知。 */
+    private fun handleEscapeIntent(intent: Intent?) {
+        val pkg = intent?.getStringExtra(CloneEscape.EXTRA_STOP_PKG) ?: return
+        val userId = intent.getIntExtra(CloneEscape.EXTRA_STOP_USER, -1)
+        if (userId < 0) return
+        BlackBoxCore.get().stopPackage(pkg, userId)
+        CloneEscape.hide(this)
+        toast(getString(R.string.clone_escape_stopped))
     }
 
     /** 装完新版下次打开，删掉上次下载残留的安装包 */

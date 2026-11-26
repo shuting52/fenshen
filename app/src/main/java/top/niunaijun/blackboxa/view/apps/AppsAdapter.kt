@@ -9,6 +9,7 @@ import top.niunaijun.blackboxa.app.CrashLog
 import top.niunaijun.blackboxa.bean.AppInfo
 import top.niunaijun.blackboxa.databinding.ItemAppBinding
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
+import top.niunaijun.blackboxa.app.MuseLoginDetect
 import top.niunaijun.blackboxa.app.MuseUsage
 import top.niunaijun.blackboxa.view.sakuga.SakugaFX
 
@@ -59,9 +60,11 @@ class AppsAdapter : RVHolderFactory() {
                 CrashLog.bread("AppsAdapter first bind ${item.packageName}")
             }
             binding.icon.setImageDrawable(item.icon)
-            // 已关联账号且设了头像：卡片上显示账号头像，没设就显示应用图标。
+            // 头像：优先显示登录账号的头像（从分身自己的数据里认出来的）；没有就用手动设的；再没有就显示应用图标。
+            val autoBmp = if (MuseLoginDetect.isMuseClone(item.packageName, item.name))
+                MuseLoginDetect.getAvatarBitmap(item.packageName, item.userId) else null
             val avatarLink = MuseUsage.getLink(itemView.context, spaceId, item.userId, item.packageName)
-            val avatarBmp = avatarLink?.let { MuseUsage.getAvatarBitmap(itemView.context, it) }
+            val avatarBmp = autoBmp ?: avatarLink?.let { MuseUsage.getAvatarBitmap(itemView.context, it) }
             if (avatarBmp != null) {
                 val d = RoundedBitmapDrawableFactory.create(itemView.resources, avatarBmp)
                 d.isCircular = true
@@ -89,18 +92,25 @@ class AppsAdapter : RVHolderFactory() {
                 }
                 onSelectionChanged?.invoke()
             }
-            // Muse 额度：关联了账号的分身，卡片下面按叠号样式显示（已用百分比条 + 重置日期 + 额外额度）。
+            // Muse 额度：关联了账号、并且分身里确实登了 Muse 账号才显示。
+            // 没扫完先按关联显示；扫完发现没登账号的，就不显示（没登录的分身不该有额度）。
             val link = MuseUsage.getLink(itemView.context, spaceId, item.userId, item.packageName)
             val quota = link?.let { id ->
                 MuseUsage.getCached(itemView.context)?.accounts?.find { it.id == id }
             }
-            if (quota != null && quota.usedPct >= 0) {
-                val planName = if (quota.plan == "free") "免费版" else "订阅版"
+            val scanned = MuseLoginDetect.isScanned(item.packageName, item.userId)
+            val loggedIn = MuseLoginDetect.getCached(item.packageName, item.userId)?.email != null
+            if (quota != null && quota.usedPct >= 0 && (!scanned || loggedIn)) {
                 binding.quotaBox.visibility = View.VISIBLE
                 binding.quotaBar.progress = quota.usedPct
-                binding.quotaText.text = "$planName · 已用 ${quota.usedPct}%"
-                binding.quotaText2.text = "${quota.resetShort}重置" +
-                    if (quota.extraLeft != null) " · 额外 ${quota.extraLeft}" else ""
+                binding.quotaText.text = "已用 ${quota.usedPct}%"
+                binding.quotaText2.text = "${quota.resetShort}重置"
+                if (quota.extraLeft != null) {
+                    binding.quotaText3.visibility = View.VISIBLE
+                    binding.quotaText3.text = "额外 ${quota.extraLeft}"
+                } else {
+                    binding.quotaText3.visibility = View.GONE
+                }
             } else {
                 binding.quotaBox.visibility = View.GONE
             }
