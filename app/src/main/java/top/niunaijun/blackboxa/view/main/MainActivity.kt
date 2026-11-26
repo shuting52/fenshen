@@ -34,6 +34,7 @@ import androidx.core.content.edit
 import androidx.viewpager2.widget.ViewPager2
 import com.afollestad.materialdialogs.MaterialDialog
 import org.json.JSONObject
+import top.niunaijun.blackboxa.app.MuseUsage
 import top.niunaijun.blackboxa.view.gms.GmsManagerActivity
 import java.net.HttpURLConnection
 import java.net.URL
@@ -608,6 +609,7 @@ class MainActivity : LoadingActivity() {
         menu.add(0, R.id.fake_location, 0, getString(R.string.fake_location))
         menu.add(0, R.id.main_refresh_process, 0, getString(R.string.refresh_process))
         menu.add(0, R.id.main_check_update, 0, getString(R.string.check_update))
+        menu.add(0, R.id.main_refresh_muse, 0, getString(R.string.refresh_muse_usage))
         menu.add(0, R.id.main_delete_space, 0, getString(R.string.delete_space))
         SakugaMenu.show(anchor, menu) { item -> onOptionsItemSelected(item) }
     }
@@ -658,6 +660,12 @@ class MainActivity : LoadingActivity() {
 
             R.id.main_check_update -> {
                 checkAppUpdate(manual = true)
+            }
+
+            R.id.main_refresh_muse -> {
+                MuseUsage.fetch(applicationContext, force = true) { data ->
+                    if (data != null) toast("Muse 额度已刷新") else toast("拉不到额度数据，检查网络后重试")
+                }
             }
 
             R.id.main_delete_space -> {

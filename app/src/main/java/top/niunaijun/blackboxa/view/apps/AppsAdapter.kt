@@ -8,6 +8,7 @@ import top.niunaijun.blackboxa.R
 import top.niunaijun.blackboxa.app.CrashLog
 import top.niunaijun.blackboxa.bean.AppInfo
 import top.niunaijun.blackboxa.databinding.ItemAppBinding
+import top.niunaijun.blackboxa.app.MuseUsage
 import top.niunaijun.blackboxa.view.sakuga.SakugaFX
 
 /**
@@ -25,6 +26,9 @@ class AppsAdapter : RVHolderFactory() {
     var selectMode: Boolean = false
     val selected: MutableSet<String> = mutableSetOf()
     var onSelectionChanged: (() -> Unit)? = null
+
+    /** 分身所在空间的 userId（分身列表页传进来），用来拼 Muse 账号关联的 key。 */
+    var spaceId: Int = 0
 
     fun selectionKey(item: AppInfo): String = "${item.packageName}|${item.userId}"
 
@@ -75,6 +79,18 @@ class AppsAdapter : RVHolderFactory() {
                     )
                 }
                 onSelectionChanged?.invoke()
+            }
+            // Muse 额度：关联了账号的分身，卡片下面显示剩的额度。
+            val link = MuseUsage.getLink(itemView.context, spaceId, item.userId, item.packageName)
+            val quota = link?.let { id ->
+                MuseUsage.getCached(itemView.context)?.accounts?.find { it.id == id }
+            }
+            if (quota != null && quota.remainingPct >= 0) {
+                binding.quotaBox.visibility = View.VISIBLE
+                binding.quotaBar.progress = quota.remainingPct
+                binding.quotaText.text = "剩 ${quota.remainingPct}% · ${quota.resetShort}重置"
+            } else {
+                binding.quotaBox.visibility = View.GONE
             }
         }
 

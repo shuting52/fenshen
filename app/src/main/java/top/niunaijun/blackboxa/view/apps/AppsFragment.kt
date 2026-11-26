@@ -22,6 +22,7 @@ import top.niunaijun.blackbox.core.env.BEnvironment
 import top.niunaijun.blackboxa.R
 import top.niunaijun.blackboxa.app.CloneSpace
 import top.niunaijun.blackboxa.app.CrashLog
+import top.niunaijun.blackboxa.app.MuseUsage
 import top.niunaijun.blackboxa.bean.AppInfo
 import top.niunaijun.blackboxa.databinding.FragmentAppsBinding
 import top.niunaijun.blackboxa.util.InjectionUtil
@@ -56,6 +57,11 @@ class AppsFragment : Fragment() {
 
     private var popupMenu: PopupMenu? = null
 
+    /** Muse 额度刷新后重绑卡片，让分身下面的剩余额度跟着变。 */
+    private val quotaListener: () -> Unit = {
+        if (isAdded && this::mAdapter.isInitialized) mAdapter.notifyDataSetChanged()
+    }
+
     private var hotfixPackage: String? = null
 
     private var hotfixUserId: Int = 0
@@ -88,6 +94,7 @@ class AppsFragment : Fragment() {
         viewBinding.stateView.showEmpty()
 
         appsAdapter = AppsAdapter()
+        appsAdapter.spaceId = userID
         appsAdapter.onSelectionChanged = { updateBatchBar() }
         mAdapter =
             RVAdapter<AppInfo>(requireContext(), appsAdapter).bind(viewBinding.recyclerView)
@@ -130,6 +137,8 @@ class AppsFragment : Fragment() {
         super.onStart()
         CrashLog.bread("AppsFragment onStart userId=$userID")
         viewModel.getInstalledApps(userID)
+        MuseUsage.addListener(quotaListener)
+        MuseUsage.fetch(requireContext())
     }
 
     /**
@@ -315,6 +324,10 @@ class AppsFragment : Fragment() {
                         R.id.app_batch_delete -> {
                             enterSelectionMode(data, view)
                         }
+
+                        R.id.app_link_muse -> {
+                            showLinkMuseDialog(data)
+                        }
                     }
                     return@setOnMenuItemClickListener true
                 }
@@ -322,6 +335,47 @@ class AppsFragment : Fragment() {
             }
         }
     }
+    /** 长按分身 → 关联 Muse 账号：关联后分身卡片下面显示这个账号剩的额度。 */
+    private fun showLinkMuseDialog(info: AppInfo) {
+        val context = requireContext()
+        val cached = MuseUsage.getCached(context)
+        if (cached == null || cached.accounts.isEmpty()) {
+            showLoading("正在拉额度，请稍等")
+            MuseUsage.fetch(context.applicationContext, force = true) { data ->
+                if (!isAdded) return@fetch
+                hideLoading()
+                if (data == null || data.accounts.isEmpty()) {
+                    context.toast("拉不到额度数据，检查网络后重试")
+                } else {
+                    showLinkMuseDialog(info)
+                }
+            }
+            return
+        }
+        // 现在数据里只有一个账号（小组件那份），直接用它；以后数据扩成多账号再做列表。
+        val account = cached.accounts.first()
+        val linked = MuseUsage.getLink(context, userID, info.userId, info.packageName)
+        MaterialDialog(context).show {
+            title(text = "关联 Muse 账号")
+            message(text = "${info.name} 关联后，分身下面会显示这个账号剩的额度。\n\n${account.label}" + if (linked != null) "\n\n当前已关联这个账号。" else "")
+            if (linked == null) {
+                positiveButton(text = "关联") {
+                    MuseUsage.setLink(context, userID, info.userId, info.packageName, account.id)
+                    mAdapter.notifyDataSetChanged()
+                    context.toast("已关联，分身下面会显示剩的额度")
+                }
+                negativeButton(R.string.cancel)
+            } else {
+                positiveButton(text = "取消关联") {
+                    MuseUsage.clearLink(context, userID, info.userId, info.packageName)
+                    mAdapter.notifyDataSetChanged()
+                    context.toast("已取消关联")
+                }
+                negativeButton(text = "关闭")
+            }
+        }
+    }
+
     private fun initData() {
         viewBinding.stateView.showLoading()
         viewModel.getInstalledApps(userID)
@@ -367,6 +421,7 @@ class AppsFragment : Fragment() {
 
     override fun onStop() {
         super.onStop()
+        MuseUsage.removeListener(quotaListener)
         viewModel.resultLiveData.value = null
         viewModel.launchLiveData.value = null
     }
