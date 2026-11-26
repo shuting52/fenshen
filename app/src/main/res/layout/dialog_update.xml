@@ -6,11 +6,11 @@
     android:layout_height="wrap_content"
     android:background="@drawable/bg_sakuga_card"
     android:orientation="vertical"
-    android:padding="24dp">
+    android:padding="20dp">
 
     <!-- 冲击星：Sakuga 的确认标记 -->
     <ImageView
-        android:layout_width="72dp"
+        android:layout_width="56dp"
         android:layout_height="72dp"
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="8dp"
@@ -23,7 +23,7 @@
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="12dp"
         android:textColor="@color/primary_text"
-        android:textSize="22sp"
+        android:textSize="20sp"
         android:textStyle="bold" />
 
     <!-- 更新内容：直接显示全文 -->
@@ -33,7 +33,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         android:textColor="@color/primary_text"
-        android:textSize="15sp"
+        android:textSize="14sp"
         android:lineSpacingExtra="4dp" />
 
     <!-- 下载进度：点“立即更新”后出现 -->
@@ -96,7 +96,7 @@
             android:paddingBottom="10dp"
             android:text="@string/cancel"
             android:textColor="@color/primary_text"
-            android:textSize="15sp" />
+            android:textSize="14sp" />
 
         <TextView
             android:id="@+id/update_now"
@@ -109,7 +109,7 @@
             android:paddingBottom="10dp"
             android:text="@string/update_now"
             android:textColor="@color/accent"
-            android:textSize="15sp"
+            android:textSize="14sp"
             android:textStyle="bold" />
     </LinearLayout>
 </LinearLayout>

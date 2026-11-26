@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 启动页：右上角倒计时 + X 关闭；冲击星旋转呼吸、标题逐字弹出、小星星漂浮、云朵起伏 -->
+<!-- 启动页：冲击星旋转呼吸、标题逐字弹出、小星星漂浮、云朵起伏；2 秒后自动进主页 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -104,42 +104,4 @@
         android:layout_gravity="bottom|center_horizontal"
         android:layout_marginBottom="56dp" />
 
-    <!-- 右上角：倒计时 + X 关闭 -->
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top|end"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        android:orientation="horizontal">
-
-        <TextView
-            android:id="@+id/splash_countdown"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_sakuga_card"
-            android:paddingStart="14dp"
-            android:paddingTop="6dp"
-            android:paddingEnd="14dp"
-            android:paddingBottom="6dp"
-            android:text="3s"
-            android:textColor="@color/accent"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/splash_close"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/bg_sakuga_card"
-            android:paddingStart="12dp"
-            android:paddingTop="6dp"
-            android:paddingEnd="12dp"
-            android:paddingBottom="6dp"
-            android:text="✕"
-            android:textColor="@color/primary_text"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-    </LinearLayout>
 </FrameLayout>

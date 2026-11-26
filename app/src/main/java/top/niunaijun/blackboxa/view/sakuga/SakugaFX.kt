@@ -732,6 +732,8 @@ object SakugaFX {
     //   返回 false，不抢手势：点击、长按、滑动都照常走。
 
     fun attachPress(view: View, onTap: ((FXView, Float, Float) -> Unit)? = null) {
+        // 必须可点：不可点的 View 在 DOWN 上就返回 false，手势收不到 UP，onTap 永远不触发
+        view.isClickable = true
         var downX = 0f
         var downY = 0f
         var downTime = 0L

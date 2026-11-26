@@ -5,10 +5,10 @@
     android:layout_height="wrap_content"
     android:background="@drawable/bg_sakuga_card"
     android:orientation="vertical"
-    android:padding="24dp">
+    android:padding="20dp">
 
     <ImageView
-        android:layout_width="64dp"
+        android:layout_width="56dp"
         android:layout_height="64dp"
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="8dp"
@@ -18,16 +18,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="12dp"
         android:text="欢迎使用淑婷分身"
         android:textColor="@color/primary_text"
-        android:textSize="22sp"
+        android:textSize="20sp"
         android:textStyle="bold" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
+        android:layout_marginBottom="8dp"
         android:orientation="horizontal">
 
         <TextView
@@ -44,13 +44,13 @@
             android:layout_height="wrap_content"
             android:text="应用分身：一个应用开多个号，数据完全隔离"
             android:textColor="@color/primary_text"
-            android:textSize="15sp" />
+            android:textSize="14sp" />
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
+        android:layout_marginBottom="8dp"
         android:orientation="horizontal">
 
         <TextView
@@ -67,13 +67,13 @@
             android:layout_height="wrap_content"
             android:text="分身空间：多个独立空间，互不干扰"
             android:textColor="@color/primary_text"
-            android:textSize="15sp" />
+            android:textSize="14sp" />
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
+        android:layout_marginBottom="8dp"
         android:orientation="horizontal">
 
         <TextView
@@ -90,13 +90,13 @@
             android:layout_height="wrap_content"
             android:text="一键批量：一次最多创建 30 个分身"
             android:textColor="@color/primary_text"
-            android:textSize="15sp" />
+            android:textSize="14sp" />
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
+        android:layout_marginBottom="8dp"
         android:orientation="horizontal">
 
         <TextView
@@ -113,13 +113,13 @@
             android:layout_height="wrap_content"
             android:text="免 Root：不用 Root，装上就能用"
             android:textColor="@color/primary_text"
-            android:textSize="15sp" />
+            android:textSize="14sp" />
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
+        android:layout_marginBottom="8dp"
         android:orientation="horizontal">
 
         <TextView
@@ -136,7 +136,7 @@
             android:layout_height="wrap_content"
             android:text="隐藏检测：藏起 Xposed 与 Root，银行支付类应用也能打开"
             android:textColor="@color/primary_text"
-            android:textSize="15sp" />
+            android:textSize="14sp" />
     </LinearLayout>
 
     <TextView
@@ -144,14 +144,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="12dp"
         android:background="@drawable/bg_sakuga_card"
-        android:paddingStart="28dp"
-        android:paddingTop="10dp"
-        android:paddingEnd="28dp"
-        android:paddingBottom="10dp"
+        android:paddingStart="22dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="22dp"
+        android:paddingBottom="8dp"
         android:text="开始使用"
         android:textColor="@color/accent"
-        android:textSize="16sp"
+        android:textSize="15sp"
         android:textStyle="bold" />
 </LinearLayout>

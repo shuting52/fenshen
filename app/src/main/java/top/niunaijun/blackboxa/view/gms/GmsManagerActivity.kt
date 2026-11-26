@@ -56,10 +56,20 @@ class GmsManagerActivity : LoadingActivity() {
     private fun openMicroGSettings() {
         val bean = mAdapter.getItems().firstOrNull { it.isInstalledGms }
         if (bean == null) {
-            toast("先给一个空间装上谷歌服务")
+            MaterialDialog(this).show {
+                title(R.string.gms_manager)
+                message(text = "还没有空间装谷歌服务：先打开一个空间的开关，把谷歌服务装进去。")
+                positiveButton(R.string.done)
+            }
             return
         }
-        BlackBoxCore.get().launchApk(GmsCore.GMS_PKG, bean.userID)
+        if (!BlackBoxCore.get().launchApk(GmsCore.GMS_PKG, bean.userID)) {
+            MaterialDialog(this).show {
+                title(R.string.gms_manager)
+                message(text = "打不开 microG 设置：进分身空间，在应用列表里点开 microG，再登谷歌账号。")
+                positiveButton(R.string.done)
+            }
+        }
     }
 
     private fun initViewModel() {

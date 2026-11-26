@@ -294,7 +294,7 @@ class MainActivity : LoadingActivity() {
             it.attributes = lp
             it.setDimAmount(0.2f)
             it.setGravity(Gravity.CENTER)
-            val width = (resources.displayMetrics.widthPixels * 0.9).toInt()
+            val width = (resources.displayMetrics.widthPixels * 0.85).toInt()
             it.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
         }
         dialog.setCancelable(true)
@@ -303,13 +303,9 @@ class MainActivity : LoadingActivity() {
             prefs.edit { putBoolean(key, true) }
         }
         dialog.findViewById<TextView>(R.id.welcome_start).setOnClickListener {
-            // 确认一击：爆裂 + 咚！
-            SakugaFX.burstAtCenter(it)
-            SakugaFX.sfxAt(it, SakugaFX.SFX_DON, it.width / 2f, -8f)
             dialog.dismiss()
         }
         welcomeShowing = true
-        SakugaFX.attachToWindow(dialog.window)
         dialog.show()
 
         // show 之后再强制居中一次：只在 show 之前设，个别机型上不生效，窗就顶到上边去了
@@ -319,7 +315,7 @@ class MainActivity : LoadingActivity() {
             lp?.gravity = Gravity.CENTER
             lp?.y = 0
             it.attributes = lp
-            val w = (resources.displayMetrics.widthPixels * 0.9).toInt()
+            val w = (resources.displayMetrics.widthPixels * 0.85).toInt()
             it.setLayout(w, ViewGroup.LayoutParams.WRAP_CONTENT)
         }
     }
@@ -341,7 +337,7 @@ class MainActivity : LoadingActivity() {
             it.attributes = lp
             it.setDimAmount(0.2f)
             it.setGravity(Gravity.CENTER)
-            val width = (resources.displayMetrics.widthPixels * 0.9).toInt()
+            val width = (resources.displayMetrics.widthPixels * 0.85).toInt()
             it.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
         }
         dialog.setCancelable(true)
@@ -370,9 +366,6 @@ class MainActivity : LoadingActivity() {
 
         cancelBtn.setOnClickListener { dialog.dismiss() }
         nowBtn.setOnClickListener {
-            // 确认一击：爆裂 + 咚！
-            SakugaFX.burstAtCenter(nowBtn)
-            SakugaFX.sfxAt(nowBtn, SakugaFX.SFX_DON, nowBtn.width / 2f, -8f)
             if (apkUrl.isNullOrEmpty()) {
                 if (htmlUrl.isNotEmpty()) {
                     startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(htmlUrl)))
@@ -389,7 +382,6 @@ class MainActivity : LoadingActivity() {
             }
         }
         updateDialog = dialog
-        SakugaFX.attachToWindow(dialog.window)
         dialog.show()
 
         // show 之后再强制居中一次：只在 show 之前设，个别机型上不生效，窗就顶到上边去了
@@ -399,7 +391,7 @@ class MainActivity : LoadingActivity() {
             lp?.gravity = Gravity.CENTER
             lp?.y = 0
             it.attributes = lp
-            val w = (resources.displayMetrics.widthPixels * 0.9).toInt()
+            val w = (resources.displayMetrics.widthPixels * 0.85).toInt()
             it.setLayout(w, ViewGroup.LayoutParams.WRAP_CONTENT)
         }
     }

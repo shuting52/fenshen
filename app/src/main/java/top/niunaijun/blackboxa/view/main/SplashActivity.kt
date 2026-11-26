@@ -9,15 +9,13 @@ import android.view.animation.LinearInterpolator
 import android.view.animation.OvershootInterpolator
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.TextView
 import top.niunaijun.blackboxa.R
 import top.niunaijun.blackboxa.view.base.BaseActivity
 import top.niunaijun.blackboxa.view.sakuga.SakugaCloudView
-import top.niunaijun.blackboxa.view.sakuga.SakugaFX
 
 /**
- * 启动页：右上角倒计时 + X 关闭；冲击星旋转呼吸、标题逐字弹出、小星星漂浮、云朵起伏。
- * 3 秒自动进主页，点 X 或点倒计时直接进。
+ * 启动页：冲击星旋转呼吸、标题逐字弹出、小星星漂浮、云朵起伏。
+ * 2 秒后自动进主页，没有倒计时、没有 X。
  */
 class SplashActivity : BaseActivity() {
 
@@ -28,23 +26,9 @@ class SplashActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
-        val numberView = findViewById<TextView>(R.id.splash_countdown)
-        val closeView = findViewById<TextView>(R.id.splash_close)
-        // X 关闭：按压扁一下，松手直接进主页；点倒计时也一样
-        SakugaFX.attachPress(closeView) { _, _, _ -> enterMain() }
-        SakugaFX.attachPress(numberView) { _, _, _ -> enterMain() }
-        numberView.text = "3s"
-        // 刚进页面还没量好位置，等一帧再弹，不然冲击星炸在左上角
-        numberView.post { if (!entered) popNumber(numberView) }
-        timer = object : CountDownTimer(3000, 1000) {
-            override fun onTick(millisUntilFinished: Long) {
-                val n = ((millisUntilFinished + 999) / 1000).toInt()
-                if (n in 1..3) {
-                    numberView.text = "${n}s"
-                    popNumber(numberView)
-                }
-            }
-
+        // 2 秒后自动进主页，没有倒计时、没有 X
+        timer = object : CountDownTimer(2000, 1000) {
+            override fun onTick(millisUntilFinished: Long) {}
             override fun onFinish() = enterMain()
         }.start()
 
@@ -98,15 +82,6 @@ class SplashActivity : BaseActivity() {
             repeatMode = ValueAnimator.REVERSE
             start()
         }
-    }
-
-    /** 倒计时数字弹一下：从 1.3 倍缩回 + 一朵小冲击星 */
-    private fun popNumber(view: TextView) {
-        view.scaleX = 1.3f
-        view.scaleY = 1.3f
-        view.animate().scaleX(1f).scaleY(1f).setDuration(300)
-            .setInterpolator(OvershootInterpolator()).start()
-        SakugaFX.burstAtCenter(view, 30f)
     }
 
     private fun enterMain() {
