@@ -1,9 +1,14 @@
 package top.niunaijun.blackboxa.app
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import org.json.JSONObject
+import java.io.File
+import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -55,11 +60,12 @@ object MuseUsage {
                 return resetText
             }
 
-        /** 免费版 · 剩 24% · 12月2日重置 · 额外 27B */
+        /** 免费版 · 已用 76% · 12月2日重置 · 额外 27B（跟叠号卡片一致） */
         val label: String
             get() {
                 val planName = if (plan == "free") "免费版" else "订阅版"
-                val sb = StringBuilder("$planName · 剩 $remainingPct% · ${resetShort}重置")
+                val useText = if (usedPct >= 0) "已用 $usedPct%" else "剩 $remainingPct%"
+                val sb = StringBuilder("$planName · $useText · ${resetShort}重置")
                 if (extraLeft != null) sb.append(" · 额外 $extraLeft")
                 return sb.toString()
             }
@@ -173,5 +179,57 @@ object MuseUsage {
         context.getSharedPreferences(LINK_PREFS, Context.MODE_PRIVATE).edit()
             .remove(linkKey(spaceId, userId, packageName))
             .apply()
+    }
+
+    // 账号头像：她自己从相册选的照片，按账号 id 存一份。
+    // 叠号/Muse 的头像拉不到（照片在叠号自己的存储里，分身读不到），只能她自己选一张。
+    private const val AVATAR_PREFIX = "muse_avatar_"
+
+    private fun avatarFile(context: Context, accountId: String) =
+        File(context.filesDir, "$AVATAR_PREFIX$accountId.jpg")
+
+    fun hasAvatar(context: Context, accountId: String): Boolean =
+        avatarFile(context, accountId).exists()
+
+    private val avatarBitmapCache = mutableMapOf<String, Bitmap?>()
+
+    /** 账号头像原图（圆图由调用方包一层 RoundedBitmapDrawable）；没设过回 null。 */
+    fun getAvatarBitmap(context: Context, accountId: String): Bitmap? {
+        avatarBitmapCache[accountId]?.let { return it }
+        val f = avatarFile(context, accountId)
+        val bmp = if (f.exists()) BitmapFactory.decodeFile(f.absolutePath) else null
+        avatarBitmapCache[accountId] = bmp
+        return bmp
+    }
+
+    /** 把相册里选的图存成账号头像（最长边压到 256px）。后台线程存，回调在主线程。 */
+    fun saveAvatar(context: Context, accountId: String, uri: Uri, onDone: ((Boolean) -> Unit)? = null) {
+        Thread {
+            var ok = false
+            try {
+                val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
+                var sample = 1
+                val maxSide = maxOf(bounds.outWidth, bounds.outHeight)
+                while (maxSide / sample > 256) sample *= 2
+                val opts = BitmapFactory.Options().apply { inSampleSize = sample }
+                val bmp = context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, opts) }
+                if (bmp != null) {
+                    FileOutputStream(avatarFile(context, accountId)).use { out ->
+                        bmp.compress(Bitmap.CompressFormat.JPEG, 85, out)
+                    }
+                    avatarBitmapCache[accountId] = bmp
+                    ok = true
+                }
+            } catch (e: Exception) {
+                CrashLog.bread("MuseUsage saveAvatar fail: ${e.javaClass.simpleName}")
+            }
+            Handler(Looper.getMainLooper()).post { onDone?.invoke(ok) }
+        }.start()
+    }
+
+    fun clearAvatar(context: Context, accountId: String) {
+        avatarBitmapCache.remove(accountId)
+        avatarFile(context, accountId).delete()
     }
 }

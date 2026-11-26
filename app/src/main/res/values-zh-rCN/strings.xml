@@ -116,4 +116,5 @@
     <string name="no_gms">当前手机没有Google服务环境。</string>
     <string name="app_link_muse">关联 Muse 账号</string>
     <string name="refresh_muse_usage">刷新 Muse 额度</string>
+    <string name="app_set_avatar">设头像</string>
 </resources>

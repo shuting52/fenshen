@@ -76,6 +76,31 @@ class AppsFragment : Fragment() {
             }
         }
 
+    /** 设头像时正在操作的分身（选完图后用它找关联的账号）。 */
+    private var pendingAvatarInfo: AppInfo? = null
+
+    private val avatarPicker =
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            val info = pendingAvatarInfo
+            pendingAvatarInfo = null
+            if (uri == null || info == null || !isAdded) return@registerForActivityResult
+            val context = requireContext()
+            val link = MuseUsage.getLink(context, userID, info.userId, info.packageName)
+            if (link == null) {
+                context.toast("先关联 Muse 账号，再给它设头像")
+                return@registerForActivityResult
+            }
+            MuseUsage.saveAvatar(context.applicationContext, link, uri) { ok ->
+                if (!isAdded) return@saveAvatar
+                if (ok) {
+                    mAdapter.notifyDataSetChanged()
+                    context.toast("头像已设置")
+                } else {
+                    context.toast("头像保存失败，换一张图再试")
+                }
+            }
+        }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -328,6 +353,10 @@ class AppsFragment : Fragment() {
                         R.id.app_link_muse -> {
                             showLinkMuseDialog(data)
                         }
+
+                        R.id.app_set_avatar -> {
+                            showSetAvatarDialog(data)
+                        }
                     }
                     return@setOnMenuItemClickListener true
                 }
@@ -373,6 +402,37 @@ class AppsFragment : Fragment() {
                 }
                 negativeButton(text = "关闭")
             }
+        }
+    }
+
+    /** 长按分身 → 设头像：给这个 Muse 账号选一张头像，分身卡片上就显示它。 */
+    private fun showSetAvatarDialog(info: AppInfo) {
+        val context = requireContext()
+        val link = MuseUsage.getLink(context, userID, info.userId, info.packageName)
+        if (link == null) {
+            context.toast("先关联 Muse 账号，再给它设头像")
+            return
+        }
+        val hasAvatar = MuseUsage.hasAvatar(context, link)
+        MaterialDialog(context).show {
+            title(text = "设头像")
+            message(text = if (hasAvatar) "这个账号已经有头像了，换一张还是移除？" else "给这个 Muse 账号选一张头像，分身卡片上就显示它。")
+            positiveButton(text = "选一张") {
+                pendingAvatarInfo = info
+                try {
+                    avatarPicker.launch("image/*")
+                } catch (e: Exception) {
+                    context.toast("打不开相册")
+                }
+            }
+            if (hasAvatar) {
+                neutralButton(text = "移除头像") {
+                    MuseUsage.clearAvatar(context, link)
+                    mAdapter.notifyDataSetChanged()
+                    context.toast("头像已移除")
+                }
+            }
+            negativeButton(text = "取消")
         }
     }
 

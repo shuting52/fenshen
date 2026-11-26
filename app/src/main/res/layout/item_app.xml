@@ -65,7 +65,7 @@
                     android:id="@+id/quota_bar"
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
-                    android:layout_height="4dp"
+                    android:layout_height="6dp"
                     android:max="100"
                     android:progress="0"
                     android:progressDrawable="@drawable/bg_sakuga_progress" />
@@ -76,6 +76,16 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:layout_marginTop="2dp"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/secondary_text"
+                    android:textSize="10sp" />
+
+            <TextView
+                    android:id="@+id/quota_text2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
                     android:ellipsize="end"
                     android:maxLines="1"
                     android:textColor="@color/secondary_text"

@@ -8,6 +8,7 @@ import top.niunaijun.blackboxa.R
 import top.niunaijun.blackboxa.app.CrashLog
 import top.niunaijun.blackboxa.bean.AppInfo
 import top.niunaijun.blackboxa.databinding.ItemAppBinding
+import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import top.niunaijun.blackboxa.app.MuseUsage
 import top.niunaijun.blackboxa.view.sakuga.SakugaFX
 
@@ -58,6 +59,14 @@ class AppsAdapter : RVHolderFactory() {
                 CrashLog.bread("AppsAdapter first bind ${item.packageName}")
             }
             binding.icon.setImageDrawable(item.icon)
+            // 已关联账号且设了头像：卡片上显示账号头像，没设就显示应用图标。
+            val avatarLink = MuseUsage.getLink(itemView.context, spaceId, item.userId, item.packageName)
+            val avatarBmp = avatarLink?.let { MuseUsage.getAvatarBitmap(itemView.context, it) }
+            if (avatarBmp != null) {
+                val d = RoundedBitmapDrawableFactory.create(itemView.resources, avatarBmp)
+                d.isCircular = true
+                binding.icon.setImageDrawable(d)
+            }
             binding.name.text = item.name
             if(item.isXpModule){
                 binding.cornerLabel.visibility = View.VISIBLE
@@ -80,15 +89,18 @@ class AppsAdapter : RVHolderFactory() {
                 }
                 onSelectionChanged?.invoke()
             }
-            // Muse 额度：关联了账号的分身，卡片下面显示剩的额度。
+            // Muse 额度：关联了账号的分身，卡片下面按叠号样式显示（已用百分比条 + 重置日期 + 额外额度）。
             val link = MuseUsage.getLink(itemView.context, spaceId, item.userId, item.packageName)
             val quota = link?.let { id ->
                 MuseUsage.getCached(itemView.context)?.accounts?.find { it.id == id }
             }
-            if (quota != null && quota.remainingPct >= 0) {
+            if (quota != null && quota.usedPct >= 0) {
+                val planName = if (quota.plan == "free") "免费版" else "订阅版"
                 binding.quotaBox.visibility = View.VISIBLE
-                binding.quotaBar.progress = quota.remainingPct
-                binding.quotaText.text = "剩 ${quota.remainingPct}% · ${quota.resetShort}重置"
+                binding.quotaBar.progress = quota.usedPct
+                binding.quotaText.text = "$planName · 已用 ${quota.usedPct}%"
+                binding.quotaText2.text = "${quota.resetShort}重置" +
+                    if (quota.extraLeft != null) " · 额外 ${quota.extraLeft}" else ""
             } else {
                 binding.quotaBox.visibility = View.GONE
             }
