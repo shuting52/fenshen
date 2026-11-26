@@ -92,12 +92,10 @@ class AppsAdapter : RVHolderFactory() {
                 }
                 onSelectionChanged?.invoke()
             }
-            // Muse 额度：关联了账号、并且分身里确实登了 Muse 账号才显示。
+            // Muse 额度：手动关联优先，没关联就按分身里登的邮箱自动认账号；并且分身里确实登了 Muse 账号才显示。
             // 没扫完先按关联显示；扫完发现没登账号的，就不显示（没登录的分身不该有额度）。
-            val link = MuseUsage.getLink(itemView.context, spaceId, item.userId, item.packageName)
-            val quota = link?.let { id ->
-                MuseUsage.getCached(itemView.context)?.accounts?.find { it.id == id }
-            }
+            val detectedEmail = MuseLoginDetect.getCached(item.packageName, item.userId)?.email
+            val quota = MuseUsage.accountFor(itemView.context, spaceId, item.userId, item.packageName, detectedEmail)
             val scanned = MuseLoginDetect.isScanned(item.packageName, item.userId)
             val loggedIn = MuseLoginDetect.getCached(item.packageName, item.userId)?.email != null
             if (quota != null && quota.usedPct >= 0 && (!scanned || loggedIn)) {

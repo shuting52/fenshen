@@ -90,7 +90,8 @@ class AppsFragment : Fragment() {
             pendingAvatarInfo = null
             if (uri == null || info == null || !isAdded) return@registerForActivityResult
             val context = requireContext()
-            val link = MuseUsage.getLink(context, userID, info.userId, info.packageName)
+            val detected = MuseLoginDetect.getCached(info.packageName, info.userId)
+            val link = MuseUsage.accountFor(context, userID, info.userId, info.packageName, detected?.email)?.id
             if (link == null) {
                 context.toast("先关联 Muse 账号，再给它设头像")
                 return@registerForActivityResult
@@ -392,22 +393,15 @@ class AppsFragment : Fragment() {
             }
             return
         }
-        // 现在数据里只有一个账号（小组件那份），直接用它；以后数据扩成多账号再做列表。
-        val account = cached.accounts.first()
         val linked = MuseUsage.getLink(context, userID, info.userId, info.packageName)
         val detected = MuseLoginDetect.getCached(info.packageName, info.userId)
+        val auto = MuseUsage.accountFor(context, userID, info.userId, info.packageName, detected?.email)
         val loginLine = if (detected?.email != null) "\n\n这个分身里登的是：${detected.email}" else ""
-        MaterialDialog(context).show {
-            title(text = "关联 Muse 账号")
-            message(text = "${info.name} 关联后，分身下面会显示这个账号剩的额度。\n\n${account.label}$loginLine" + if (linked != null) "\n\n当前已关联这个账号。" else "")
-            if (linked == null) {
-                positiveButton(text = "关联") {
-                    MuseUsage.setLink(context, userID, info.userId, info.packageName, account.id)
-                    mAdapter.notifyDataSetChanged()
-                    context.toast("已关联，分身下面会显示剩的额度")
-                }
-                negativeButton(R.string.cancel)
-            } else {
+        if (linked != null) {
+            val account = cached.accounts.find { it.id == linked } ?: cached.accounts.first()
+            MaterialDialog(context).show {
+                title(text = "关联 Muse 账号")
+                message(text = "${info.name} 关联后，分身下面会显示这个账号剩的额度。\n\n${account.label}$loginLine\n\n当前已关联这个账号。")
                 positiveButton(text = "取消关联") {
                     MuseUsage.clearLink(context, userID, info.userId, info.packageName)
                     mAdapter.notifyDataSetChanged()
@@ -415,13 +409,46 @@ class AppsFragment : Fragment() {
                 }
                 negativeButton(text = "关闭")
             }
+            return
         }
+        if (cached.accounts.size == 1) {
+            val account = cached.accounts.first()
+            MaterialDialog(context).show {
+                title(text = "关联 Muse 账号")
+                message(text = "${info.name} 关联后，分身下面会显示这个账号剩的额度。\n\n${account.label}$loginLine")
+                positiveButton(text = "关联") {
+                    MuseUsage.setLink(context, userID, info.userId, info.packageName, account.id)
+                    mAdapter.notifyDataSetChanged()
+                    context.toast("已关联，分身下面会显示剩的额度")
+                }
+                negativeButton(R.string.cancel)
+            }
+            return
+        }
+        // 多账号：列表选一个；分身里登的邮箱能对上的默认选中。
+        val autoIndex = if (auto != null) cached.accounts.indexOf(auto) else -1
+        var selected = if (autoIndex >= 0) autoIndex else 0
+        // 多账号选择器用系统 AlertDialog：material-dialogs 的 list 模块没接进来，
+        // 代理又下不到那个新依赖，换 AppCompat 自带的单选列表，不加新依赖。
+        val items = cached.accounts.map { (it.emailMasked ?: it.id) + " · " + it.label }.toTypedArray()
+        androidx.appcompat.app.AlertDialog.Builder(context)
+            .setTitle("关联 Muse 账号")
+            .setMessage("${info.name} 关联后，分身下面会显示这个账号剩的额度。$loginLine")
+            .setSingleChoiceItems(items, selected) { _, which -> selected = which }
+            .setPositiveButton("关联") { _, _ ->
+                MuseUsage.setLink(context, userID, info.userId, info.packageName, cached.accounts[selected].id)
+                mAdapter.notifyDataSetChanged()
+                context.toast("已关联，分身下面会显示剩的额度")
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
     }
 
     /** 长按分身 → 设头像：给这个 Muse 账号选一张头像，分身卡片上就显示它。 */
     private fun showSetAvatarDialog(info: AppInfo) {
         val context = requireContext()
-        val link = MuseUsage.getLink(context, userID, info.userId, info.packageName)
+        val detected = MuseLoginDetect.getCached(info.packageName, info.userId)
+        val link = MuseUsage.accountFor(context, userID, info.userId, info.packageName, detected?.email)?.id
         if (link == null) {
             context.toast("先关联 Muse 账号，再给它设头像")
             return

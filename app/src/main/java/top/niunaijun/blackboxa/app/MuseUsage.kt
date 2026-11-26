@@ -13,15 +13,15 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /**
- * Muse 额度：从 GitHub 上的 muse-usage.json 拉取（和小组件同一份数据）。
- * 分身长按「关联 Muse 账号」后，分身卡片下面显示这个账号剩的额度。
- *
- * 注意：数据现在只有一份账号（小组件那份）；别的账号的数据不在这个文件里，
- * 要显示多个账号，得先把那份数据扩成多账号（需要各账号的会话，不是分身这边能变的）。
+ * Muse 额度：主数据是叠号推到 GitHub 的 diehao-usage.json（多账号，带 accounts 数组），
+ * 拉不到时回落到小组件那份 muse-usage.json（单账号）。
+ * 分身长按「关联 Muse 账号」可以手动选账号；没手动关联时，按分身里登的邮箱自动认账号
+ * （邮箱先 SHA-256，叠号发来的 email_sha256 就是这么算的，不在数据里放明文邮箱）。
  */
 object MuseUsage {
 
-    const val DATA_URL = "https://raw.githubusercontent.com/shuting52/10-05landezhaole/main/muse-usage.json"
+    const val DATA_URL = "https://raw.githubusercontent.com/shuting52/10-05landezhaole/main/diehao-usage.json"
+    private const val FALLBACK_URL = "https://raw.githubusercontent.com/shuting52/10-05landezhaole/main/muse-usage.json"
 
     private const val PREFS = "muse_usage"
     private const val KEY_JSON = "json"
@@ -37,7 +37,9 @@ object MuseUsage {
         val resetIso: String,
         val resetText: String,
         val extraRemainingPct: Int?,
-        val extraLeft: String?
+        val extraLeft: String?,
+        val emailSha256: String? = null,
+        val emailMasked: String? = null
     ) {
         /** 12月2日（reset_iso 解析失败时用 reset_text 原样） */
         val resetShort: String
@@ -94,21 +96,15 @@ object MuseUsage {
         Thread {
             var fresh: UsageData? = null
             try {
-                val conn = URL(DATA_URL).openConnection() as HttpURLConnection
-                conn.connectTimeout = 15000
-                conn.readTimeout = 15000
-                conn.requestMethod = "GET"
-                if (conn.responseCode in 200..299) {
-                    val text = conn.inputStream.bufferedReader().use { it.readText() }
-                    fresh = parse(text)
-                    if (fresh != null) {
-                        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-                            .putString(KEY_JSON, text)
-                            .putLong(KEY_FETCHED_AT, System.currentTimeMillis())
-                            .apply()
-                    }
+                // 主数据拉不到（文件还没建、404）就回落到小组件那份单账号数据。
+                val text = fetchUrl(DATA_URL) ?: fetchUrl(FALLBACK_URL)
+                fresh = text?.let { parse(it) }
+                if (fresh != null && text != null) {
+                    context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+                        .putString(KEY_JSON, text)
+                        .putLong(KEY_FETCHED_AT, System.currentTimeMillis())
+                        .apply()
                 }
-                conn.disconnect()
             } catch (e: Exception) {
                 CrashLog.bread("MuseUsage fetch fail: ${e.javaClass.simpleName}")
             }
@@ -118,6 +114,49 @@ object MuseUsage {
                 onDone?.invoke(result)
             }
         }.start()
+    }
+
+    /** 拉一个 URL 的全文；非 2xx 或异常回 null。 */
+    private fun fetchUrl(url: String): String? {
+        return try {
+            val conn = URL(url).openConnection() as HttpURLConnection
+            conn.connectTimeout = 15000
+            conn.readTimeout = 15000
+            conn.requestMethod = "GET"
+            val text = if (conn.responseCode in 200..299) {
+                conn.inputStream.bufferedReader().use { it.readText() }
+            } else null
+            conn.disconnect()
+            text
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /** 邮箱指纹：小写去空格后 SHA-256（叠号发来的 email_sha256 就是这么算的）。 */
+    fun sha256Hex(input: String): String {
+        return try {
+            val md = java.security.MessageDigest.getInstance("SHA-256")
+            val bytes = md.digest(input.trim().toLowerCase().toByteArray(Charsets.UTF_8))
+            val sb = StringBuilder()
+            for (b in bytes) sb.append(String.format("%02x", b.toInt() and 0xFF))
+            sb.toString()
+        } catch (e: Exception) {
+            ""
+        }
+    }
+
+    /** 分身该显示哪个账号的额度：手动关联优先；没关联就按分身里登的邮箱自动认。 */
+    fun accountFor(context: Context, spaceId: Int, userId: Int, packageName: String, detectedEmail: String?): Account? {
+        val cached = getCached(context) ?: return null
+        val linked = getLink(context, spaceId, userId, packageName)
+        if (linked != null) {
+            cached.accounts.find { it.id == linked }?.let { return it }
+        }
+        val email = detectedEmail?.trim()?.takeIf { it.contains("@") } ?: return null
+        val fp = sha256Hex(email)
+        if (fp.isEmpty()) return null
+        return cached.accounts.find { it.emailSha256 != null && it.emailSha256.equals(fp, ignoreCase = true) }
     }
 
     /** 解析：兼容现在这种单账号顶层字段，也兼容以后加的 accounts 数组。 */
@@ -156,7 +195,9 @@ object MuseUsage {
             resetIso = o.optString("reset_iso", ""),
             resetText = o.optString("reset_text", ""),
             extraRemainingPct = if (o.has("additional_remaining_pct")) o.optInt("additional_remaining_pct") else null,
-            extraLeft = extraLeft
+            extraLeft = extraLeft,
+            emailSha256 = o.optString("email_sha256", "").takeIf { it.isNotEmpty() },
+            emailMasked = o.optString("email_masked", "").takeIf { it.isNotEmpty() }
         )
     }
 
