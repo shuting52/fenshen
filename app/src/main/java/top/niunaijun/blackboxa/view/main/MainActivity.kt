@@ -5,12 +5,15 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Color
+import android.graphics.Typeface
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.StyleSpan
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.view.Gravity
-import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
@@ -20,6 +23,7 @@ import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.appcompat.view.menu.MenuBuilder
 import androidx.core.content.FileProvider
 import java.io.File
 import java.io.FileOutputStream
@@ -77,9 +81,6 @@ class MainActivity : LoadingActivity() {
     /** 欢迎弹窗正开着：先不弹更新提醒，等下次再查 */
     private var welcomeShowing = false
 
-    /** 右上角 ⋮ 菜单：存一份，Sakuga 菜单从这儿读标题 */
-    private var optionsMenu: Menu? = null
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         CrashLog.bread("MainActivity onCreate")
@@ -99,6 +100,7 @@ class MainActivity : LoadingActivity() {
         CrashLog.bread("MainActivity initViewPager ok")
         initFab()
         initToolbarSubTitle()
+        initOverflowButton()
         cleanOldUpdateApks()
         checkAppUpdate()
         showWelcomeIfNeeded()
@@ -112,8 +114,6 @@ class MainActivity : LoadingActivity() {
         if (now - lastUpdateCheckTime > 10 * 60 * 1000L) {
             checkAppUpdate()
         }
-        // 顶栏的 ⋮ 按钮是系统建的，菜单重建后可能换新的，回来就重新接一次
-        viewBinding.toolbarLayout.toolbar.post { attachOverflowMenu() }
     }
 
     /** 装完新版下次打开，删掉上次下载残留的安装包 */
@@ -357,8 +357,8 @@ class MainActivity : LoadingActivity() {
         titleView.scaleY = 0.8f
         titleView.animate().scaleX(1f).scaleY(1f).setDuration(350)
             .setInterpolator(OvershootInterpolator()).start()
-        // 更新内容直接显示全文，不打字机
-        messageView.text = body.ifEmpty { "淑婷分身有新版本。" }
+        // 更新内容按 增加 / 优化 / 删除 三段排，小标题加粗
+        messageView.text = formatUpdateBody(body.ifEmpty { "淑婷分身有新版本。" })
         dialog.setOnDismissListener {
             updatePolling = false
             updateDialog = null
@@ -590,58 +590,47 @@ class MainActivity : LoadingActivity() {
             }
         }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.menu_main, menu)
-        optionsMenu = menu
-        // ⋮ 按钮是系统建的，等一帧、顶栏摆好位置再接管它的点击
-        viewBinding.toolbarLayout.toolbar.post { attachOverflowMenu() }
-        return true
-    }
-
-    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
-        // 菜单每次打开前都到这里：顶栏要是重建了 ⋮ 按钮，这里当场把接管重新挂一次
-        attachOverflowMenu()
-        return super.onPrepareOptionsMenu(menu)
-    }
-
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        if (hasFocus) {
-            // 窗口拿到焦点时顶栏肯定已经摆好位置，⋮ 按钮一定在：这里再接管一次才稳。
-            // 之前只靠 onCreateOptionsMenu / onResume 里的 post，那时按钮还没建出来，接管一次都没挂上。
-            viewBinding.toolbarLayout.toolbar.post { attachOverflowMenu() }
-        }
-    }
-
-    /** 接管右上角 ⋮：点它不再弹系统白菜单，改弹 Sakuga 菜单（逐项弹出 + 点按爆裂）。
-     *  找不到按钮就不接管，系统菜单照常弹，不会坏事。 */
-    private fun attachOverflowMenu() {
+    /** 右上角 ⋮：自己的按钮，不再劫持系统按钮。
+     *  系统 ⋮ 是顶栏建的，接管时机永远对不上（建出来之前接管不到，建出来之后监听会被换掉），
+     *  三版都挂在这儿。这版直接在顶栏里放一个自己的 ⋮ 按钮，点它就弹 GlassSelect 菜单。 */
+    private fun initOverflowButton() {
         val toolbar = viewBinding.toolbarLayout.toolbar
-        val overflow = findOverflowButton(toolbar) ?: return
-        overflow.setOnClickListener { anchor ->
-            optionsMenu?.let { menu ->
-                SakugaMenu.show(anchor, menu) { item -> onOptionsItemSelected(item) }
+        val overflowBtn = toolbar.findViewById<ImageButton>(R.id.toolbar_overflow)
+        overflowBtn.visibility = View.VISIBLE
+        overflowBtn.setOnClickListener { anchor -> showSakugaMenu(anchor) }
+    }
+
+    /** GlassSelect 菜单：列表从 ⋮ 按钮里胀出来，脖子拉伸绷断，选项一个接一个到齐。 */
+    private fun showSakugaMenu(anchor: View) {
+        val menu = MenuBuilder(this)
+        menu.add(0, R.id.main_setting, 0, getString(R.string.setting))
+        menu.add(0, R.id.main_gms, 0, getString(R.string.gms_manager))
+        menu.add(0, R.id.fake_location, 0, getString(R.string.fake_location))
+        menu.add(0, R.id.main_refresh_process, 0, getString(R.string.refresh_process))
+        menu.add(0, R.id.main_check_update, 0, getString(R.string.check_update))
+        menu.add(0, R.id.main_delete_space, 0, getString(R.string.delete_space))
+        SakugaMenu.show(anchor, menu) { item -> onOptionsItemSelected(item) }
+    }
+
+    /** 更新内容按 增加 / 优化 / 删除 三段排：三个小标题加粗，其余原样；没有三段的老版本说明直接原样显示。 */
+    private fun formatUpdateBody(body: String): CharSequence {
+        val lines = body.lines()
+        val hasSections = lines.any {
+            val t = it.trim()
+            t == "增加：" || t == "优化：" || t == "删除："
+        }
+        if (!hasSections) return body
+        val sb = SpannableStringBuilder()
+        for (line in lines) {
+            val t = line.trim()
+            val start = sb.length
+            sb.append(line)
+            if (t == "增加：" || t == "优化：" || t == "删除：") {
+                sb.setSpan(StyleSpan(Typeface.BOLD), start, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
+            sb.append("\n")
         }
-    }
-
-    /** 在顶栏里找 ⋮ 按钮：先找内容描述是“更多选项”（中文）或“More options”（英文）的，
-     *  找不到就取顶栏里最后一个 ImageButton——⋮ 在顶栏最右边，主界面顶栏里除了它没有别的 ImageButton。 */
-    private fun findOverflowButton(root: ViewGroup): View? {
-        val buttons = ArrayList<View>()
-        collectImageButtons(root, buttons)
-        return buttons.firstOrNull {
-            val desc = it.contentDescription?.toString().orEmpty()
-            desc.contains("更多") || desc.contains("More")
-        } ?: buttons.lastOrNull()
-    }
-
-    private fun collectImageButtons(root: ViewGroup, out: ArrayList<View>) {
-        for (i in 0 until root.childCount) {
-            val child = root.getChildAt(i)
-            if (child is ImageButton) out.add(child)
-            if (child is ViewGroup) collectImageButtons(child, out)
-        }
+        return sb
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {

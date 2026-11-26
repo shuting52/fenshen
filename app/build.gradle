@@ -18,8 +18,8 @@ android {
         applicationId "mis.shuting.fensheng"
         minSdkVersion 21
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 46
-        versionName "2.3.31"
+        versionCode 47
+        versionName "2.3.32"
 
         flavorDimensions "BlackBox32"
     }

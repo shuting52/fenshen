@@ -10,4 +10,16 @@
         app:subtitleTextColor="@color/paper"
         app:titleTextColor="@color/paper">
 
+    <!-- 自己的 ⋮ 按钮：点它弹 GlassSelect 菜单；默认隐藏，只有主界面显示 -->
+    <ImageButton
+        android:id="@+id/toolbar_overflow"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="end|center_vertical"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="更多选项"
+        android:src="@drawable/ic_more_vert"
+        android:tint="@color/paper"
+        android:visibility="gone" />
+
 </com.google.android.material.appbar.MaterialToolbar>
