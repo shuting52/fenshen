@@ -323,6 +323,10 @@ class AppsFragment : Fragment() {
             }
             popupMenu = PopupMenu(requireContext(),view).also {
                 it.inflate(R.menu.app_menu)
+                // 关联 Muse 账号 / 设头像只对 Muse 分身有意义，别的 App（比如 Cue）长按不显示这两项。
+                val isMuse = MuseLoginDetect.isMuseClone(data.packageName, data.name)
+                it.menu.findItem(R.id.app_link_muse)?.isVisible = isMuse
+                it.menu.findItem(R.id.app_set_avatar)?.isVisible = isMuse
                 it.setOnMenuItemClickListener { item ->
                     when (item.itemId) {
                         R.id.app_remove -> {
