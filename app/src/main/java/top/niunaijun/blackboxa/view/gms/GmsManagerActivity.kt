@@ -5,8 +5,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Switch
-import java.net.HttpURLConnection
-import java.net.URL
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import cbfg.rvadapter.RVAdapter
@@ -49,40 +47,19 @@ class GmsManagerActivity : LoadingActivity() {
             viewBinding.gmsHint.visibility = View.VISIBLE
         }
 
-        // 检查谷歌连接：分身和本软件走同一条网（同一个 VPN），这里通不通就是分身通不通
-        SakugaFX.attachPress(viewBinding.gmsCheckNetwork) { _, _, _ -> checkGoogleNetwork() }
+        // 打开 microG 设置：先在里面登上谷歌账号，应用里的 Google 登录才能直接选账号
+        SakugaFX.attachPress(viewBinding.gmsOpenMicrogSettings) { _, _, _ -> openMicroGSettings() }
     }
 
-    /** 测手机到谷歌通不通，8 秒超时，两个登录用的地址各测一次。 */
-    private fun checkGoogleNetwork() {
-        toast("正在检查…")
-        Thread {
-            val targets = listOf(
-                "accounts.google.com" to "https://accounts.google.com/generate_204",
-                "www.google.com" to "https://www.google.com/generate_204"
-            )
-            val lines = targets.map { (name, url) ->
-                val start = System.currentTimeMillis()
-                try {
-                    val conn = URL(url).openConnection() as HttpURLConnection
-                    conn.connectTimeout = 8000
-                    conn.readTimeout = 8000
-                    conn.requestMethod = "GET"
-                    val code = conn.responseCode
-                    conn.disconnect()
-                    "$name：能连上（${System.currentTimeMillis() - start}ms，$code）"
-                } catch (e: Exception) {
-                    "$name：连不上（${e.javaClass.simpleName}）"
-                }
-            }
-            runOnUiThread {
-                MaterialDialog(this).show {
-                    title(R.string.gms_manager)
-                    message(text = lines.joinToString("\n") + "\n\n连不上：换个 VPN 节点、或关掉 VPN 再试。能连上但登录还卡：登录页在慢慢加载，多等一会儿，或先在 microG 设置里登上谷歌账号，再回应用里点登录。")
-                    positiveButton(R.string.done)
-                }
-            }
-        }.start()
+    /** 打开 microG 设置：找第一个装了谷歌服务的空间，在那里面登谷歌账号。
+     *  先在 microG 里登上账号，应用里的 Google 登录才能直接选账号，不用再走网页。 */
+    private fun openMicroGSettings() {
+        val bean = mAdapter.getItems().firstOrNull { it.isInstalledGms }
+        if (bean == null) {
+            toast("先给一个空间装上谷歌服务")
+            return
+        }
+        BlackBoxCore.get().launchApk(GmsCore.GMS_PKG, bean.userID)
     }
 
     private fun initViewModel() {

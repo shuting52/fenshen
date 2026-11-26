@@ -31,11 +31,11 @@
             android:id="@+id/recyclerView"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            app:layout_constraintBottom_toTopOf="@id/gms_check_network"
+            app:layout_constraintBottom_toTopOf="@id/gms_open_microg_settings"
             app:layout_constraintTop_toBottomOf="@id/gms_hint" />
 
     <TextView
-            android:id="@+id/gms_check_network"
+            android:id="@+id/gms_open_microg_settings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
@@ -46,7 +46,7 @@
             android:gravity="center"
             android:paddingTop="12dp"
             android:paddingBottom="12dp"
-            android:text="检查谷歌连接"
+            android:text="打开 microG 设置"
             android:textColor="@color/primary_text"
             android:textSize="16sp"
             android:textStyle="bold"
