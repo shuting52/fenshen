@@ -598,22 +598,19 @@ class MainActivity : LoadingActivity() {
         return true
     }
 
-    override fun onMenuOpened(featureId: Int, menu: Menu): Boolean {
-        if (featureId == Window.FEATURE_OPTIONS_PANEL) {
-            // ⋮ 点下去、系统菜单还没弹出来之前截住它：改弹 Sakuga 菜单，系统那个不弹。
-            // 只靠接管按钮点击不保险：顶栏重建按钮会把监听换掉，点 ⋮ 就还是系统菜单、一点效果没有，这层是兜底。
-            val toolbar = viewBinding.toolbarLayout.toolbar
-            val anchor = findOverflowButton(toolbar) ?: toolbar
-            SakugaMenu.show(anchor, menu) { item -> onOptionsItemSelected(item) }
-            return false
-        }
-        return super.onMenuOpened(featureId, menu)
-    }
-
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
         // 菜单每次打开前都到这里：顶栏要是重建了 ⋮ 按钮，这里当场把接管重新挂一次
         attachOverflowMenu()
         return super.onPrepareOptionsMenu(menu)
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            // 窗口拿到焦点时顶栏肯定已经摆好位置，⋮ 按钮一定在：这里再接管一次才稳。
+            // 之前只靠 onCreateOptionsMenu / onResume 里的 post，那时按钮还没建出来，接管一次都没挂上。
+            viewBinding.toolbarLayout.toolbar.post { attachOverflowMenu() }
+        }
     }
 
     /** 接管右上角 ⋮：点它不再弹系统白菜单，改弹 Sakuga 菜单（逐项弹出 + 点按爆裂）。
@@ -628,19 +625,23 @@ class MainActivity : LoadingActivity() {
         }
     }
 
-    /** 在顶栏里找 ⋮ 按钮：内容描述是“更多选项”（中文）或“More options”（英文） */
+    /** 在顶栏里找 ⋮ 按钮：先找内容描述是“更多选项”（中文）或“More options”（英文）的，
+     *  找不到就取顶栏里最后一个 ImageButton——⋮ 在顶栏最右边，主界面顶栏里除了它没有别的 ImageButton。 */
     private fun findOverflowButton(root: ViewGroup): View? {
+        val buttons = ArrayList<View>()
+        collectImageButtons(root, buttons)
+        return buttons.firstOrNull {
+            val desc = it.contentDescription?.toString().orEmpty()
+            desc.contains("更多") || desc.contains("More")
+        } ?: buttons.lastOrNull()
+    }
+
+    private fun collectImageButtons(root: ViewGroup, out: ArrayList<View>) {
         for (i in 0 until root.childCount) {
             val child = root.getChildAt(i)
-            val desc = child.contentDescription?.toString().orEmpty()
-            if (child is ImageButton && (desc.contains("更多") || desc.contains("More"))) {
-                return child
-            }
-            if (child is ViewGroup) {
-                findOverflowButton(child)?.let { return it }
-            }
+            if (child is ImageButton) out.add(child)
+            if (child is ViewGroup) collectImageButtons(child, out)
         }
-        return null
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
