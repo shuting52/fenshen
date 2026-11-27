@@ -155,7 +155,6 @@ class MainActivity : LoadingActivity() {
      *  只有 Release 里找不到安装包时才回退到打开 Release 页。
      *  自动查时没网或查不到就静默跳过；手动点“检查更新”时把结果说出来。 */
     private fun checkAppUpdate(manual: Boolean = false) {
-        lastUpdateCheckTime = System.currentTimeMillis()
         Thread {
             try {
                 val conn = URL("https://api.github.com/repos/shuting52/fenshen/releases/latest")
@@ -167,6 +166,8 @@ class MainActivity : LoadingActivity() {
                     if (manual) runOnUiThread { toast(R.string.update_check_failed) }
                     return@Thread
                 }
+                // 只在拿到 200 响应后才写节流时间戳：失败一次不锁 10 分钟
+                lastUpdateCheckTime = System.currentTimeMillis()
                 val json = JSONObject(conn.inputStream.bufferedReader().readText())
                 val tag = json.optString("tag_name", "").trimStart('v')
                 val body = json.optString("body", "")
@@ -192,6 +193,7 @@ class MainActivity : LoadingActivity() {
                 }
                 val htmlUrl = json.optString("html_url", "")
                 runOnUiThread {
+                    if (isFinishing || isDestroyed) return@runOnUiThread
                     showUpdateDialog(tag, body, apkUrl, htmlUrl)
                 }
             } catch (e: Exception) {
@@ -211,9 +213,7 @@ class MainActivity : LoadingActivity() {
         progressBox: LinearLayout, buttonBox: LinearLayout, cloud: View
     ) {
         val fileName = "Shuting-Fenshen-$tag.apk"
-        // 完成一击只炸一次
-        var completionBurstFired = false
-        val outFile = File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), fileName)
+        val outFile = File(updateDownloadDir(), fileName)
         updatePolling = true
         Thread {
             try {
@@ -246,14 +246,6 @@ class MainActivity : LoadingActivity() {
                                         cloud.translationX = (progressBar.width * percent / 100f - cloud.width / 2f)
                                             .coerceIn(0f, maxX)
                                     }
-                                    if (percent >= 100 && !completionBurstFired) {
-                                        completionBurstFired = true
-                                        SakugaFX.burstAtCenter(cloud)
-                                        SakugaFX.sfxAt(
-                                            cloud, SakugaFX.SFX_DON,
-                                            cloud.width / 2f, -8f
-                                        )
-                                    }
                                 }
                             }
                         }
@@ -270,14 +262,9 @@ class MainActivity : LoadingActivity() {
                     if (isFinishing || isDestroyed) return@runOnUiThread
                     val dlg = updateDialog
                     if (dlg?.isShowing == true) {
-                        // 让完成一击的命中帧读完再调安装器
-                        dlg.window?.decorView?.postDelayed({
-                            dlg.dismiss()
-                            installDownloadedApk(fileName)
-                        }, 260)
-                    } else {
-                        installDownloadedApk(fileName)
+                        dlg.dismiss()
                     }
+                    installDownloadedApk(fileName)
                 }
             } catch (e: Exception) {
                 CrashLog.bread("update download failed: ${e.message}")
@@ -345,6 +332,8 @@ class MainActivity : LoadingActivity() {
     private fun showUpdateDialog(tag: String, body: String, apkUrl: String?, htmlUrl: String) {
         // 欢迎弹窗正开着：这次不弹更新提醒，下次查的时候再弹
         if (welcomeShowing) return
+        // 下载进行中：不重复弹，避免新弹窗把旧下载静默取消掉
+        if (updatePolling) return
         updateDialog?.dismiss()
         val dialog = Dialog(this)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -415,8 +404,12 @@ class MainActivity : LoadingActivity() {
         }
     }
 
+    /** 更新包下载目录：外置存储不可用时 getExternalFilesDir 返回 null，回退到 cacheDir，避免 File(null, …) 空指针 */
+    private fun updateDownloadDir(): File =
+        getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: cacheDir
+
     private fun installDownloadedApk(fileName: String) {
-        val file = File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), fileName)
+        val file = File(updateDownloadDir(), fileName)
         if (!file.exists()) {
             toast(R.string.update_download_failed)
             return
@@ -532,11 +525,18 @@ class MainActivity : LoadingActivity() {
 
     fun scanUser() {
         val userList = CloneSpace.realUserIds()
-
-        if (fragmentList.size == userList.size) {
-            fragmentList.add(AppsFragment.newInstance(fragmentList.size))
-        } else if (fragmentList.size > userList.size + 1) {
-            fragmentList.removeLast()
+        // 按 userID 删页：只留仍存在的空间页 + 加空间页（userID == 空间数）；
+        // 以前按数量 removeLast()，删掉的是最后的加空间页，死空间的页反而留下了。
+        val addPageId = userList.size
+        val seen = mutableSetOf<Int>()
+        val kept = fragmentList.filter {
+            (it.userID in userList || it.userID == addPageId) && seen.add(it.userID)
+        }
+        if (kept.size == fragmentList.size && kept.any { it.userID == addPageId }) return
+        fragmentList.clear()
+        fragmentList.addAll(kept)
+        if (kept.none { it.userID == addPageId }) {
+            fragmentList.add(AppsFragment.newInstance(addPageId))
         }
 
         // 延后通知：FragmentManager 正执行事务时直接 notify 会闪退，推到下一轮主线程再通知
@@ -569,6 +569,7 @@ class MainActivity : LoadingActivity() {
                     BlackBoxCore.get().deleteUser(spaceId)
                     CloneSpace.removeSpace(spaceId)
                     runOnUiThread {
+                        if (isFinishing || isDestroyed) return@runOnUiThread
                         hideLoading()
                         rebuildViewPager()
                         toast(getString(R.string.space_deleted, remark))

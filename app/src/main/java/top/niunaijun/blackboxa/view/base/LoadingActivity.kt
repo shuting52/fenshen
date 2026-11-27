@@ -19,7 +19,7 @@ abstract class LoadingActivity : BaseActivity() {
             loadingDialog = it
         }
         dialog.setLoadingText(text ?: "LOADING...")
-        if (!dialog.isAdded) {
+        if (!dialog.isAdded && !supportFragmentManager.isStateSaved) {
             dialog.show(supportFragmentManager, "sakuga_loading")
             supportFragmentManager.executePendingTransactions()
         }

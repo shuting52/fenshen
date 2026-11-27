@@ -50,7 +50,7 @@ class SakugaLoadingDialog : DialogFragment() {
     override fun onStart() {
         super.onStart()
         cloud?.startBob()
-        SakugaFX.attachToWindow(dialog?.window)
+        // 不挂 FX 效果层：MATCH_PARENT 的效果层会把 Dialog 窗口撑满屏高，卡片顶到顶部（2.3.30 同款教训）
     }
 
     override fun onStop() {

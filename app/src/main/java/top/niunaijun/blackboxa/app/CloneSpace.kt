@@ -54,6 +54,10 @@ object CloneSpace {
         prefs.edit {
             putString("CloneUsers_$spaceId", members.joinToString(","))
             remove("CloneOwner_$cloneUserId")
+            // 该克隆名下的自定义名一并清掉，否则 id 复用后新克隆会继承旧名字
+            prefs.all.keys
+                .filter { it.startsWith("CloneAppName|$spaceId|$cloneUserId|") }
+                .forEach { remove(it) }
         }
         return spaceId
     }
@@ -65,6 +69,7 @@ object CloneSpace {
             ?.split(",")?.mapNotNull { it.toIntOrNull() } ?: emptyList()
         prefs.edit {
             remove("Remark$spaceId")
+            remove("AppList$spaceId")
             remove("CloneUsers_$spaceId")
             members.forEach { remove("CloneOwner_$it") }
             prefs.all.keys

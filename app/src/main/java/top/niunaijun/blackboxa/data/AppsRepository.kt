@@ -386,11 +386,13 @@ class AppsRepository {
         if (realIds.isNotEmpty()) {
             val id = realIds.last()
             if (blackBoxCore.getInstalledApplications(0, id).isEmpty()) {
+                // 空空间连同它名下的隐藏克隆一起删，映射/备注/排序/自定义名一次清干净
+                val members = CloneSpace.spaceMembers(id).filter { it != id }
+                members.forEach { blackBoxCore.deleteUser(it) }
                 blackBoxCore.deleteUser(id)
+                CloneSpace.removeSpace(id)
                 AppManager.mRemarkSharedPreferences.edit {
-                    remove("Remark$id")
-                    remove("AppList$id")
-                    remove("CloneUsers_$id")
+                    members.forEach { remove("AppList$it") }
                 }
                 scanUser()
                 return

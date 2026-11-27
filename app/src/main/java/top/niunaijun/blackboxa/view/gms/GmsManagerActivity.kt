@@ -19,6 +19,7 @@ import top.niunaijun.blackboxa.util.inflate
 import top.niunaijun.blackboxa.util.toast
 import top.niunaijun.blackbox.BlackBoxCore
 import top.niunaijun.blackbox.core.GmsCore
+import top.niunaijun.blackboxa.app.CloneSpace
 import top.niunaijun.blackboxa.view.base.LoadingActivity
 import top.niunaijun.blackboxa.view.sakuga.SakugaFX
 import java.net.HttpURLConnection
@@ -60,8 +61,9 @@ class GmsManagerActivity : LoadingActivity() {
     /** 打开 microG 设置：找第一个装了谷歌服务的空间，在那里面登谷歌账号。
      *  先在 microG 里登上账号，应用里的 Google 登录才能直接选账号，不用再走网页。 */
     private fun openMicroGSettings() {
-        val bean = mAdapter.getItems().firstOrNull { it.isInstalledGms }
-        if (bean == null) {
+        // 列表是异步加载的，进页立刻点会读到空列表误报没装；直接按空间查安装状态
+        val userId = CloneSpace.realUserIds().firstOrNull { BlackBoxCore.get().isInstallGms(it) }
+        if (userId == null) {
             MaterialDialog(this).show {
                 title(R.string.gms_manager)
                 message(text = "还没有空间装谷歌服务：先打开一个空间的开关，把谷歌服务装进去。")
@@ -69,7 +71,7 @@ class GmsManagerActivity : LoadingActivity() {
             }
             return
         }
-        if (!BlackBoxCore.get().launchApk(GmsCore.GMS_PKG, bean.userID)) {
+        if (!BlackBoxCore.get().launchApk(GmsCore.GMS_PKG, userId)) {
             MaterialDialog(this).show {
                 title(R.string.gms_manager)
                 message(text = "打不开 microG 设置：进分身空间，在应用列表里点开 microG，再登谷歌账号。")
@@ -111,6 +113,7 @@ class GmsManagerActivity : LoadingActivity() {
                 else -> "VPN 已覆盖但谷歌打不开：换个 VPN 节点再试。"
             }
             runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 MaterialDialog(this).show {
                     title(R.string.gms_manager)
                     message(text = lines.joinToString("\n"))
@@ -197,7 +200,8 @@ class GmsManagerActivity : LoadingActivity() {
                 viewModel.installGms(userID)
             }
             negativeButton(R.string.cancel){
-                checkbox.isChecked = !checkbox.isChecked
+                // 按数据复位，不取反：点行进来的开关本来就没动过，取反会显示错状态
+                checkbox.isChecked = mAdapter.getItems().firstOrNull { it.userID == userID }?.isInstalledGms ?: checkbox.isChecked
             }
         }
     }
@@ -211,7 +215,8 @@ class GmsManagerActivity : LoadingActivity() {
                 viewModel.uninstallGms(userID)
             }
             negativeButton(R.string.cancel){
-                checkbox.isChecked = !checkbox.isChecked
+                // 按数据复位，不取反：点行进来的开关本来就没动过，取反会显示错状态
+                checkbox.isChecked = mAdapter.getItems().firstOrNull { it.userID == userID }?.isInstalledGms ?: checkbox.isChecked
             }
         }
     }

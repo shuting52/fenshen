@@ -79,9 +79,21 @@ public class GmsCore {
         googleApps.addAll(GOOGLE_SERVICE);
         googleApps.addAll(GOOGLE_APP);
 
+        // 先记下本次调用前就装好的包：失败时只撤本次新装上的，不动之前在用的
+        BlackBoxCore blackBoxCore = BlackBoxCore.get();
+        Set<String> preInstalled = new HashSet<>();
+        for (String pkg : googleApps) {
+            if (blackBoxCore.isInstalled(pkg, userId)) {
+                preInstalled.add(pkg);
+            }
+        }
         InstallResult installResult = installPackages(googleApps, userId);
         if (!installResult.success) {
-            uninstallGApps(userId);
+            for (String pkg : googleApps) {
+                if (!preInstalled.contains(pkg) && blackBoxCore.isInstalled(pkg, userId)) {
+                    blackBoxCore.uninstallPackageAsUser(pkg, userId);
+                }
+            }
             return installResult;
         }
         return installResult;

@@ -71,6 +71,7 @@ class GmsRepository {
             "gsfproxy.apk" to GmsCore.GSF_PKG,
             "fakestore.apk" to GmsCore.VENDING_PKG
         )
+        val newlyInstalled = mutableListOf<String>()
         for ((asset, pkg) in apks) {
             if (blackBoxCore.isInstalled(pkg, userId)) continue
             val out = File(dir, asset)
@@ -86,10 +87,11 @@ class GmsRepository {
             }
             val r = blackBoxCore.installPackageAsUser(out.absolutePath, userId)
             if (!r.success) {
-                // 有一个装不上就全撤掉，不留半套
-                blackBoxCore.uninstallGms(userId)
+                // 有一个装不上就撤掉本次新装上的，不动之前就装好的整套
+                newlyInstalled.forEach { blackBoxCore.uninstallPackageAsUser(it, userId) }
                 return r
             }
+            newlyInstalled.add(pkg)
         }
         return InstallResult()
     }

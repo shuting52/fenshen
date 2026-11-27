@@ -60,6 +60,12 @@ public class SystemProviderStub extends ClassInvocationStub implements BContentP
                 ContextCompat.fixAttributionSourceState(arg, BlackBoxCore.getHostUid());
             }
         }
-        return method.invoke(mBase, args);
+        // 同 ContentProviderStub：反射抛出的 InvocationTargetException 要解包，
+        // 否则动态代理会包成 UndeclaredThrowableException，分身里抓不到就闪退
+        try {
+            return method.invoke(mBase, args);
+        } catch (Throwable ex) {
+            throw ex.getCause();
+        }
     }
 }

@@ -31,7 +31,13 @@ public final class WebViewRendererSlots {
 
     /** provider 声明的服务总数（保守取 40，本机 WebView 恰好是这个数量）。 */
     private static final int POOL_SIZE = 40;
-    /** 每个 guest 进程预留的槽位数。40 / 4 = 最多 10 个 guest 进程各自独占一段。 */
+    /**
+     * 每个 guest 进程预留的槽位数。40 / 4 = 最多 10 个 guest 进程各自独占一段。
+     * 容量上限是 provider 声明的 40 个服务决定的：11 个以上分身进程同时 alive 时，
+     * bpid % 10 会让后起的 guest 与先占的 guest 共用一段，Chromium 会拒绑后者
+     * （白屏）。这是架构上限，FREE_COUNT 保持 50 不动——把进程数砍到 10 会让
+     * 第 11 个分身直接打不开，比白屏更差。
+     */
     private static final int SLOTS_PER_PROCESS = 4;
 
     private static final Object sLock = new Object();
@@ -60,7 +66,8 @@ public final class WebViewRendererSlots {
         if (index < 0 || index >= POOL_SIZE) {
             return null;
         }
-        int mapped = slotForCurrentProcess() * SLOTS_PER_PROCESS + index;
+        // index 取模进段内：单个 guest 开 5 个以上渲染器时，index 会越界或串进下一段
+        int mapped = slotForCurrentProcess() * SLOTS_PER_PROCESS + (index % SLOTS_PER_PROCESS);
         if (mapped < 0 || mapped >= POOL_SIZE || mapped == index) {
             return null;
         }
