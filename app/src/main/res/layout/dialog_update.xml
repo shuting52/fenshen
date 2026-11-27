@@ -26,15 +26,23 @@
         android:textSize="20sp"
         android:textStyle="bold" />
 
-    <!-- 更新内容：直接显示全文 -->
-    <TextView
-        android:id="@+id/update_message"
+    <!-- 更新内容：可上下滚动，内容再长也不会把按钮顶出屏幕 -->
+    <ScrollView
+        android:id="@+id/update_message_scroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        android:textColor="@color/primary_text"
-        android:textSize="14sp"
-        android:lineSpacingExtra="4dp" />
+        android:scrollbars="vertical"
+        android:fadeScrollbars="false">
+
+        <TextView
+            android:id="@+id/update_message"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/primary_text"
+            android:textSize="14sp"
+            android:lineSpacingExtra="4dp" />
+    </ScrollView>
 
     <!-- 下载进度：点“立即更新”后出现 -->
     <LinearLayout

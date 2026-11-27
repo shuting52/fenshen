@@ -22,6 +22,7 @@ import android.view.animation.OvershootInterpolator
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.ScrollView
 import android.widget.TextView
 import androidx.appcompat.view.menu.MenuBuilder
 import top.niunaijun.blackboxa.app.CloneEscape
@@ -367,6 +368,15 @@ class MainActivity : LoadingActivity() {
             .setInterpolator(OvershootInterpolator()).start()
         // 更新内容按 增加 / 优化 / 删除 三段排，小标题加粗
         messageView.text = formatUpdateBody(body.ifEmpty { "淑婷分身有新版本。" })
+        // 内容太长时把滚动区限高：短内容照常显示，长内容在区内滚动，按钮始终可见
+        val messageScroll = dialog.findViewById<ScrollView>(R.id.update_message_scroll)
+        messageView.post {
+            val maxH = (resources.displayMetrics.heightPixels * 0.42).toInt()
+            if (messageView.height > maxH) {
+                messageScroll.layoutParams.height = maxH
+                messageScroll.requestLayout()
+            }
+        }
         dialog.setOnDismissListener {
             updatePolling = false
             updateDialog = null
