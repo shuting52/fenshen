@@ -24,6 +24,7 @@ import top.niunaijun.blackboxa.app.CloneSpace
 import top.niunaijun.blackboxa.app.CrashLog
 import top.niunaijun.blackboxa.app.CloneEscape
 import top.niunaijun.blackboxa.app.MuseLoginDetect
+import top.niunaijun.blackboxa.app.MuseQuotaCache
 import top.niunaijun.blackboxa.app.MuseUsage
 import top.niunaijun.blackboxa.bean.AppInfo
 import top.niunaijun.blackboxa.databinding.FragmentAppsBinding
@@ -485,6 +486,7 @@ class AppsFragment : Fragment() {
             for (info in items) {
                 if (MuseLoginDetect.isMuseClone(info.packageName, info.name)) {
                     MuseLoginDetect.detect(info.packageName, info.userId)
+                    MuseQuotaCache.scan(info.packageName, info.userId)
                     scanned = true
                 }
             }
@@ -549,6 +551,7 @@ class AppsFragment : Fragment() {
         super.onStop()
         MuseUsage.removeListener(quotaListener)
         MuseLoginDetect.clearCache()
+        MuseQuotaCache.clearCache()
         viewModel.resultLiveData.value = null
         viewModel.launchLiveData.value = null
     }
