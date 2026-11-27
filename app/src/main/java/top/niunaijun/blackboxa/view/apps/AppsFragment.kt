@@ -23,9 +23,6 @@ import top.niunaijun.blackboxa.R
 import top.niunaijun.blackboxa.app.CloneSpace
 import top.niunaijun.blackboxa.app.CrashLog
 import top.niunaijun.blackboxa.app.CloneEscape
-import top.niunaijun.blackboxa.app.MuseLoginDetect
-import top.niunaijun.blackboxa.app.MuseQuotaCache
-import top.niunaijun.blackboxa.app.MuseUsage
 import top.niunaijun.blackboxa.bean.AppInfo
 import top.niunaijun.blackboxa.databinding.FragmentAppsBinding
 import top.niunaijun.blackboxa.util.InjectionUtil
@@ -60,11 +57,6 @@ class AppsFragment : Fragment() {
 
     private var popupMenu: PopupMenu? = null
 
-    /** Muse 额度刷新后重绑卡片，让分身下面的剩余额度跟着变。 */
-    private val quotaListener: () -> Unit = {
-        if (isAdded && this::mAdapter.isInitialized) mAdapter.notifyDataSetChanged()
-    }
-
     private var hotfixPackage: String? = null
 
     private var hotfixUserId: Int = 0
@@ -79,35 +71,8 @@ class AppsFragment : Fragment() {
             }
         }
 
-    /** 设头像时正在操作的分身（选完图后用它找关联的账号）。 */
-    private var pendingAvatarInfo: AppInfo? = null
-
     /** 正在打开的分身（打开成功后挂逃生通知）。 */
     private var pendingLaunch: AppInfo? = null
-
-    private val avatarPicker =
-        registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-            val info = pendingAvatarInfo
-            pendingAvatarInfo = null
-            if (uri == null || info == null || !isAdded) return@registerForActivityResult
-            val context = requireContext()
-            val detected = MuseLoginDetect.getCached(info.packageName, info.userId)
-            val link = MuseUsage.accountFor(context, userID, info.userId, info.packageName, detected?.email)?.id
-            if (link == null) {
-                context.toast("先关联 Muse 账号，再给它设头像")
-                return@registerForActivityResult
-            }
-            MuseUsage.saveAvatar(context.applicationContext, link, uri) { ok ->
-                if (!isAdded) return@saveAvatar
-                if (ok) {
-                    mAdapter.notifyDataSetChanged()
-                    context.toast("头像已设置")
-                } else {
-                    context.toast("头像保存失败，换一张图再试")
-                }
-            }
-        }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -126,7 +91,6 @@ class AppsFragment : Fragment() {
         viewBinding.stateView.showEmpty()
 
         appsAdapter = AppsAdapter()
-        appsAdapter.spaceId = userID
         appsAdapter.onSelectionChanged = { updateBatchBar() }
         mAdapter =
             RVAdapter<AppInfo>(requireContext(), appsAdapter).bind(viewBinding.recyclerView)
@@ -170,9 +134,6 @@ class AppsFragment : Fragment() {
         super.onStart()
         CrashLog.bread("AppsFragment onStart userId=$userID")
         viewModel.getInstalledApps(userID)
-        MuseUsage.addListener(quotaListener)
-        MuseUsage.fetch(requireContext())
-        scanMuseLogins()
     }
 
     /**
@@ -325,10 +286,6 @@ class AppsFragment : Fragment() {
             }
             popupMenu = PopupMenu(requireContext(),view).also {
                 it.inflate(R.menu.app_menu)
-                // 关联 Muse 账号 / 设头像只对 Muse 分身有意义，别的 App（比如 Cue）长按不显示这两项。
-                val isMuse = MuseLoginDetect.isMuseClone(data.packageName, data.name)
-                it.menu.findItem(R.id.app_link_muse)?.isVisible = isMuse
-                it.menu.findItem(R.id.app_set_avatar)?.isVisible = isMuse
                 it.setOnMenuItemClickListener { item ->
                     when (item.itemId) {
                         R.id.app_remove -> {
@@ -363,13 +320,6 @@ class AppsFragment : Fragment() {
                             enterSelectionMode(data, view)
                         }
 
-                        R.id.app_link_muse -> {
-                            showLinkMuseDialog(data)
-                        }
-
-                        R.id.app_set_avatar -> {
-                            showSetAvatarDialog(data)
-                        }
                     }
                     return@setOnMenuItemClickListener true
                 }
@@ -377,125 +327,6 @@ class AppsFragment : Fragment() {
             }
         }
     }
-    /** 长按分身 → 关联 Muse 账号：关联后分身卡片下面显示这个账号剩的额度。 */
-    private fun showLinkMuseDialog(info: AppInfo) {
-        val context = requireContext()
-        val cached = MuseUsage.getCached(context)
-        if (cached == null || cached.accounts.isEmpty()) {
-            showLoading("正在拉额度，请稍等")
-            MuseUsage.fetch(context.applicationContext, force = true) { data ->
-                if (!isAdded) return@fetch
-                hideLoading()
-                if (data == null || data.accounts.isEmpty()) {
-                    context.toast("拉不到额度数据，检查网络后重试")
-                } else {
-                    showLinkMuseDialog(info)
-                }
-            }
-            return
-        }
-        val linked = MuseUsage.getLink(context, userID, info.userId, info.packageName)
-        val detected = MuseLoginDetect.getCached(info.packageName, info.userId)
-        val auto = MuseUsage.accountFor(context, userID, info.userId, info.packageName, detected?.email)
-        val loginLine = if (detected?.email != null) "\n\n这个分身里登的是：${detected.email}" else ""
-        if (linked != null) {
-            val account = cached.accounts.find { it.id == linked } ?: cached.accounts.first()
-            MaterialDialog(context).show {
-                title(text = "关联 Muse 账号")
-                message(text = "${info.name} 关联后，分身下面会显示这个账号剩的额度。\n\n${account.label}$loginLine\n\n当前已关联这个账号。")
-                positiveButton(text = "取消关联") {
-                    MuseUsage.clearLink(context, userID, info.userId, info.packageName)
-                    mAdapter.notifyDataSetChanged()
-                    context.toast("已取消关联")
-                }
-                negativeButton(text = "关闭")
-            }
-            return
-        }
-        if (cached.accounts.size == 1) {
-            val account = cached.accounts.first()
-            MaterialDialog(context).show {
-                title(text = "关联 Muse 账号")
-                message(text = "${info.name} 关联后，分身下面会显示这个账号剩的额度。\n\n${account.label}$loginLine")
-                positiveButton(text = "关联") {
-                    MuseUsage.setLink(context, userID, info.userId, info.packageName, account.id)
-                    mAdapter.notifyDataSetChanged()
-                    context.toast("已关联，分身下面会显示剩的额度")
-                }
-                negativeButton(R.string.cancel)
-            }
-            return
-        }
-        // 多账号：列表选一个；分身里登的邮箱能对上的默认选中。
-        val autoIndex = if (auto != null) cached.accounts.indexOf(auto) else -1
-        var selected = if (autoIndex >= 0) autoIndex else 0
-        // 多账号选择器用系统 AlertDialog：material-dialogs 的 list 模块没接进来，
-        // 代理又下不到那个新依赖，换 AppCompat 自带的单选列表，不加新依赖。
-        val items = cached.accounts.map { (it.emailMasked ?: it.id) + " · " + it.label }.toTypedArray()
-        androidx.appcompat.app.AlertDialog.Builder(context)
-            .setTitle("关联 Muse 账号")
-            .setMessage("${info.name} 关联后，分身下面会显示这个账号剩的额度。$loginLine")
-            .setSingleChoiceItems(items, selected) { _, which -> selected = which }
-            .setPositiveButton("关联") { _, _ ->
-                MuseUsage.setLink(context, userID, info.userId, info.packageName, cached.accounts[selected].id)
-                mAdapter.notifyDataSetChanged()
-                context.toast("已关联，分身下面会显示剩的额度")
-            }
-            .setNegativeButton(R.string.cancel, null)
-            .show()
-    }
-
-    /** 长按分身 → 设头像：给这个 Muse 账号选一张头像，分身卡片上就显示它。 */
-    private fun showSetAvatarDialog(info: AppInfo) {
-        val context = requireContext()
-        val detected = MuseLoginDetect.getCached(info.packageName, info.userId)
-        val link = MuseUsage.accountFor(context, userID, info.userId, info.packageName, detected?.email)?.id
-        if (link == null) {
-            context.toast("先关联 Muse 账号，再给它设头像")
-            return
-        }
-        val hasAvatar = MuseUsage.hasAvatar(context, link)
-        MaterialDialog(context).show {
-            title(text = "设头像")
-            message(text = if (hasAvatar) "这个账号已经有头像了，换一张还是移除？" else "给这个 Muse 账号选一张头像，分身卡片上就显示它。")
-            positiveButton(text = "选一张") {
-                pendingAvatarInfo = info
-                try {
-                    avatarPicker.launch("image/*")
-                } catch (e: Exception) {
-                    context.toast("打不开相册")
-                }
-            }
-            if (hasAvatar) {
-                neutralButton(text = "移除头像") {
-                    MuseUsage.clearAvatar(context, link)
-                    mAdapter.notifyDataSetChanged()
-                    context.toast("头像已移除")
-                }
-            }
-            negativeButton(text = "取消")
-        }
-    }
-
-    /** 扫一遍分身里登的 Muse 账号（后台读分身自己的数据），扫完刷新卡片。 */
-    private fun scanMuseLogins() {
-        if (!this::mAdapter.isInitialized) return
-        val items = mAdapter.getItems()
-        Thread {
-            var scanned = false
-            for (info in items) {
-                if (MuseLoginDetect.isMuseClone(info.packageName, info.name)) {
-                    MuseLoginDetect.detect(info.packageName, info.userId)
-                    MuseQuotaCache.scan(info.packageName, info.userId)
-                    scanned = true
-                }
-            }
-            if (scanned && isAdded) {
-                requireActivity().runOnUiThread { mAdapter.notifyDataSetChanged() }
-            }
-        }.start()
-    }
-
     private fun initData() {
         viewBinding.stateView.showLoading()
         viewModel.getInstalledApps(userID)
@@ -503,7 +334,6 @@ class AppsFragment : Fragment() {
 
             if (it != null) {
                 mAdapter.setItems(it)
-                scanMuseLogins()
                 if (it.isEmpty()) {
                     viewBinding.stateView.showEmpty()
                 } else {
@@ -549,9 +379,6 @@ class AppsFragment : Fragment() {
 
     override fun onStop() {
         super.onStop()
-        MuseUsage.removeListener(quotaListener)
-        MuseLoginDetect.clearCache()
-        MuseQuotaCache.clearCache()
         viewModel.resultLiveData.value = null
         viewModel.launchLiveData.value = null
     }

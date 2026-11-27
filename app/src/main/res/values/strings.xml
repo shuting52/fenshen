@@ -117,9 +117,6 @@
     <string name="gms_microg_hint">手机上没有谷歌环境，这里装的是 microG 开源版谷歌服务。装好后，在分身里打开 microG 设置、登上谷歌账号，要谷歌登录的应用就能用了。</string>
     <string name="gms_open_microg">装好了，现在打开 microG 设置、登上谷歌账号？</string>
     <string name="gms_open_settings">打开 microG 设置</string>
-    <string name="app_link_muse">关联 Muse 账号</string>
-    <string name="refresh_muse_usage">刷新 Muse 额度</string>
-    <string name="app_set_avatar">设头像</string>
     <string name="clone_escape_channel">分身运行中</string>
     <string name="clone_escape_text">点一下回到分身首页</string>
     <string name="clone_escape_stop">停止分身</string>

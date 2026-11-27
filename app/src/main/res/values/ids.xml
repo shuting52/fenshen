@@ -2,5 +2,4 @@
 <resources>
     <!-- SakugaFX 全屏效果层的 id（挂在窗口 decor 上） -->
     <item name="sakuga_fx_view" type="id" />
-    <item name="main_refresh_muse" type="id" />
 </resources>
