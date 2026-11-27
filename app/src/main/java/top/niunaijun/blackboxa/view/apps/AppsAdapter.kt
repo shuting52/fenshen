@@ -92,13 +92,12 @@ class AppsAdapter : RVHolderFactory() {
                 }
                 onSelectionChanged?.invoke()
             }
-            // Muse 额度：手动关联优先，没关联就按分身里登的邮箱自动认账号；并且分身里确实登了 Muse 账号才显示。
-            // 没扫完先按关联显示；扫完发现没登账号的，就不显示（没登录的分身不该有额度）。
+            // Muse 额度：手动关联了就显示，关联是她自己认的；没关联的只靠自动认（邮箱对上了本身就是登录的证据）。
+            // 2.3.35 那道“扫不到登录就不显示”的门拆了：Muse 不把邮箱明文留在 shared_prefs 里，扫描根本认不到登录，
+            // 那道门只会把她关联好的额度也藏起来。没关联也没认上的分身本来就不会显示。
             val detectedEmail = MuseLoginDetect.getCached(item.packageName, item.userId)?.email
             val quota = MuseUsage.accountFor(itemView.context, spaceId, item.userId, item.packageName, detectedEmail)
-            val scanned = MuseLoginDetect.isScanned(item.packageName, item.userId)
-            val loggedIn = MuseLoginDetect.getCached(item.packageName, item.userId)?.email != null
-            if (quota != null && quota.usedPct >= 0 && (!scanned || loggedIn)) {
+            if (quota != null && quota.usedPct >= 0) {
                 binding.quotaBox.visibility = View.VISIBLE
                 binding.quotaBar.progress = quota.usedPct
                 binding.quotaText.text = "已用 ${quota.usedPct}%"
